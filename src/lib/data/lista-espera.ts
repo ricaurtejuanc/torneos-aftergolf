@@ -1,8 +1,9 @@
 import "server-only";
+import { headers } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
-import { enviarEmailInscripcionConfirmada, enviarEmailInscripcionRecibida } from "@/lib/email";
+import { enviarEmailInscripcionConfirmada, enviarEmailPlazaLiberada } from "@/lib/email";
 
 export type EsperandoDetallado = {
   inscripcionId: string;
@@ -71,7 +72,7 @@ export async function promoverDeListaEspera(
   const { data: inscripcionRaw } = await supabase
     .from("inscripciones")
     .select(
-      "id, torneo_id, jugador_id, precio_cents, estado, jugadores(nombre, apellidos, email), torneos(nombre, fecha, modo_pago, organizador_id)",
+      "id, torneo_id, jugador_id, precio_cents, estado, jugadores(nombre, apellidos, email), torneos(nombre, fecha, slug, modo_pago, organizador_id)",
     )
     .eq("id", inscripcionId)
     .maybeSingle();
@@ -86,6 +87,7 @@ export async function promoverDeListaEspera(
     torneos: {
       nombre: string;
       fecha: string;
+      slug: string;
       modo_pago: string;
       organizador_id: string | null;
     } | null;
@@ -125,16 +127,34 @@ export async function promoverDeListaEspera(
   const jugador = inscripcion.jugadores;
   if (jugador?.email) {
     const organizador = await obtenerOrganizadorPorId(supabase, inscripcion.torneos.organizador_id);
-    const item = {
-      torneoNombre: inscripcion.torneos.nombre,
-      torneoFecha: inscripcion.torneos.fecha,
-      precioCents: inscripcion.precio_cents,
-    };
     const nombre = `${jugador.nombre} ${jugador.apellidos}`.trim();
     if (pagaEnClub) {
+      const item = {
+        torneoNombre: inscripcion.torneos.nombre,
+        torneoFecha: inscripcion.torneos.fecha,
+        precioCents: inscripcion.precio_cents,
+      };
       await enviarEmailInscripcionConfirmada({ destinatario: jugador.email, nombre, items: [item], organizador });
     } else {
-      await enviarEmailInscripcionRecibida({ destinatario: jugador.email, nombre, items: [item], organizador });
+      // A diferencia de una inscripción normal, aquí no hay redirección en
+      // el navegador a la página de confirmación (esto se dispara desde
+      // una acción de admin, o automáticamente tras una cancelación): el
+      // email es el único sitio donde el jugador se entera, así que debe
+      // llevar el link a la pasarela/medio de pago (misma página que usa
+      // el invitado normal) en vez de solo avisar que hay que esperar.
+      const host = (await headers()).get("host");
+      const urlPago = host
+        ? `https://${host}/torneos/${inscripcion.torneos.slug}/inscripcion/confirmacion?pedido=${pedido.id}`
+        : `/torneos/${inscripcion.torneos.slug}/inscripcion/confirmacion?pedido=${pedido.id}`;
+      await enviarEmailPlazaLiberada({
+        destinatario: jugador.email,
+        nombre,
+        torneoNombre: inscripcion.torneos.nombre,
+        torneoFecha: inscripcion.torneos.fecha,
+        precioCents: inscripcion.precio_cents,
+        urlPago,
+        organizador,
+      });
     }
   }
 
