@@ -20,7 +20,12 @@ export type ModoJuego = "individual" | "parejas";
 export type ModoSalida = "consecutivo" | "shotgun" | "shotgun_silencioso";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado" | "cancelado";
-export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
+export type EstadoInscripcion =
+  | "carrito"
+  | "pendiente_pago"
+  | "confirmada"
+  | "cancelada"
+  | "en_lista_espera";
 export type MetodoPago = "bizum" | "transferencia" | "tarjeta" | "stripe" | "club";
 export type ModoPagoTorneo = "organizador" | "club";
 export type EstadoPedidoPago =
@@ -187,6 +192,7 @@ export type Torneo = {
   horarios_pdf_url: string | null;
   inscripcion_url_externa: string | null;
   gestion_whatsapp: boolean;
+  lista_espera_automatica: boolean;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;

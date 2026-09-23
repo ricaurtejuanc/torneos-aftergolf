@@ -53,7 +53,11 @@ const secciones: Seccion[] = [
           <li>
             Precio de inscripción, y opcionalmente un precio distinto para socios del club.
           </li>
-          <li>Cupo máximo de plazas (opcional): al llenarse, la web deja de admitir inscripciones.</li>
+          <li>
+            Cupo máximo de plazas (opcional): al llenarse, la web deja apuntarse a una lista de
+            espera en vez de admitir más inscripciones — ver &quot;Lista de espera&quot; más
+            abajo.
+          </li>
           <li>
             Formato de puntuación (Stableford, Medal Play, Mejor bola, Scramble, Match Play) y
             si se juega individual o por parejas.
@@ -119,6 +123,18 @@ const secciones: Seccion[] = [
           da la inscripción por buena; <em>Cancelar</em> la deja marcada &quot;Cancelado&quot; en
           el historial y libera la plaza; <em>Eliminar</em> la borra por completo (solo para
           duplicados o pruebas).
+        </p>
+        <p className={claseSubtitulo}>Lista de espera</p>
+        <p className={claseParrafo}>
+          Si el torneo tiene cupo máximo, en cuanto se llena la web deja apuntarse a una{" "}
+          <strong>lista de espera</strong> (sin cobrar nada todavía) en vez de bloquear la
+          inscripción. Aparece como una sección aparte, debajo de la tabla de inscritos, en
+          orden de llegada. Cuando se libera una plaza (cancelas una inscripción o rechazas un
+          pago), la cubre el primero de la lista <strong>solo si activaste</strong> &quot;Cubrir
+          plazas liberadas automáticamente&quot; al crear/editar el torneo; si no, la cubres tú
+          a mano con el botón <em>&quot;Dar plaza&quot;</em> de quien elijas. Dar plaza crea su
+          pedido de pago (o confirma directamente si el torneo se paga en el club) y le avisa
+          por email.
         </p>
       </>
     ),

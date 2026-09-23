@@ -63,6 +63,7 @@ function leerCamposTorneo(formData: FormData) {
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
+    lista_espera_automatica: formData.get("lista_espera_automatica") === "on",
     formato_puntuacion: String(formData.get("formato_puntuacion") ?? "stableford") as FormatoPuntuacion,
     modo_juego: String(formData.get("modo_juego") ?? "individual") as ModoJuego,
     modo_salida: String(formData.get("modo_salida") ?? "consecutivo") as ModoSalida,

@@ -201,6 +201,19 @@ export function TorneoForm({
             defaultValue={torneo?.cupo_maximo ?? ""}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
+          <label className="mt-2 flex items-center gap-2 text-xs text-ajag-gris-500">
+            <input
+              type="checkbox"
+              name="lista_espera_automatica"
+              defaultChecked={torneo?.lista_espera_automatica ?? false}
+            />
+            Cubrir plazas liberadas automáticamente (por orden de llegada)
+          </label>
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Con el cupo lleno, la web deja apuntarse a una lista de espera en vez de bloquear la
+            inscripción. Desmarcado, tú eliges a mano quién cubre cada plaza que se libere, desde
+            Inscritos.
+          </p>
         </div>
       </div>
 

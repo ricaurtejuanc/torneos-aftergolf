@@ -15,6 +15,7 @@ export function InscripcionForm({
   precioSocioCents,
   pagaEnClub,
   whatsappTelefono,
+  listaEspera,
 }: {
   torneoSlug: string;
   jugador: Jugador | null;
@@ -22,6 +23,7 @@ export function InscripcionForm({
   precioSocioCents: number | null;
   pagaEnClub: boolean;
   whatsappTelefono?: string | null;
+  listaEspera?: boolean;
 }) {
   const accionConSlug = inscribirse.bind(null, torneoSlug);
   const [state, formAction, pending] = useActionState<EstadoInscripcionForm, FormData>(
@@ -263,7 +265,9 @@ export function InscripcionForm({
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 
       <div className="flex items-center justify-between border-t border-ajag-gris-100 pt-4">
-        <span className="text-sm text-ajag-gris-500">Precio de la inscripción</span>
+        <span className="text-sm text-ajag-gris-500">
+          {listaEspera ? "Precio si se libera tu plaza" : "Precio de la inscripción"}
+        </span>
         <span className="font-display text-lg font-semibold text-ajag-verde-900">
           {formatearPrecio(precioMostrado)}
         </span>
@@ -272,15 +276,23 @@ export function InscripcionForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-xl bg-ajag-verde-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        className={`rounded-xl px-5 py-3 text-sm font-medium text-white transition disabled:opacity-60 ${
+          listaEspera
+            ? "bg-ajag-oro-600 hover:bg-ajag-oro-500"
+            : "bg-ajag-verde-700 hover:bg-ajag-verde-600"
+        }`}
       >
-        {jugador && !pagaEnClub
+        {listaEspera
           ? pending
-            ? "Añadiendo..."
-            : "Añadir al carrito"
-          : pending
-            ? "Enviando..."
-            : "Confirmar inscripción"}
+            ? "Apuntando..."
+            : "Apuntarme a la lista de espera"
+          : jugador && !pagaEnClub
+            ? pending
+              ? "Añadiendo..."
+              : "Añadir al carrito"
+            : pending
+              ? "Enviando..."
+              : "Confirmar inscripción"}
       </button>
 
       {whatsappTelefono ? (

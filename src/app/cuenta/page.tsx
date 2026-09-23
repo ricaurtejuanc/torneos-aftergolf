@@ -14,6 +14,8 @@ import { RondasList } from "./rondas-list";
 import { CuentaTabs } from "./tabs";
 import { PerfilEditor } from "./perfil-editor";
 import { listarMisRondas, mediaDifferentials, RONDAS_PARA_MEDIA } from "@/lib/data/rondas";
+import { formatearFechaCorta } from "@/lib/format";
+import { Clock } from "lucide-react";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -69,8 +71,20 @@ export default async function CuentaPage({
     pedidosQuery = pedidosQuery.in("torneo_id", torneoIds.length > 0 ? torneoIds : ["-"]);
   }
 
-  const [{ data: pedidos }, bizumNumero, rondas] = await Promise.all([
+  // Un jugador solo puede estar en lista de espera de torneos de SU
+  // organizador (jugador.id ya está acotado a este club, y la inscripción
+  // no deja registrarse en un torneo de otro), así que no hace falta
+  // volver a filtrar por organizador aquí.
+  const listaEsperaQuery = supabase
+    .from("inscripciones")
+    .select("id, created_at, torneos(nombre, slug, fecha)")
+    .eq("jugador_id", jugador.id)
+    .eq("estado", "en_lista_espera")
+    .order("created_at", { ascending: false });
+
+  const [{ data: pedidos }, { data: listaEspera }, bizumNumero, rondas] = await Promise.all([
     conReintentos(() => pedidosQuery.order("created_at", { ascending: false })),
+    conReintentos(() => listaEsperaQuery),
     obtenerBizumNumero(),
     listarMisRondas(),
   ]);
@@ -104,12 +118,39 @@ export default async function CuentaPage({
             datos: <PerfilEditor jugador={jugador} />,
             inscripciones: (
               <section>
+                {listaEspera && listaEspera.length > 0 ? (
+                  <div className="mb-4 flex flex-col gap-2">
+                    {(
+                      listaEspera as unknown as {
+                        id: string;
+                        created_at: string;
+                        torneos: { nombre: string; slug: string; fecha: string } | null;
+                      }[]
+                    ).map((e) => (
+                      <div
+                        key={e.id}
+                        className="card-ajag flex items-center gap-3 border-l-4 border-l-ajag-oro-500 p-4"
+                      >
+                        <Clock size={18} className="shrink-0 text-ajag-oro-600" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-ajag-verde-900">
+                            {e.torneos?.nombre ?? "Torneo"}
+                          </p>
+                          <p className="text-xs text-ajag-gris-500">
+                            En lista de espera
+                            {e.torneos ? ` · ${formatearFechaCorta(e.torneos.fecha)}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 {pedidos && pedidos.length > 0 ? (
                   <PedidosList
                     pedidos={pedidos as unknown as ComponentProps<typeof PedidosList>["pedidos"]}
                     bizumNumero={bizumNumero}
                   />
-                ) : (
+                ) : listaEspera && listaEspera.length > 0 ? null : (
                   <div className="card-ajag p-6 text-sm text-ajag-gris-500">
                     Todavía no te has inscrito en ningún torneo.{" "}
                     <Link href="/torneos" className="font-medium text-ajag-verde-700 underline">

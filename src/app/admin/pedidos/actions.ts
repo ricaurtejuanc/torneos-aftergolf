@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { promoverSiguienteAutomatico } from "@/lib/data/lista-espera";
 
 // Borra el pedido y las inscripciones que llevaba, sin dejar rastro en el
 // historial. Solo la usa eliminarPedido (limpiar duplicados/pruebas):
@@ -129,12 +130,13 @@ export async function rechazarPago(pedidoId: string) {
   // Validar que el pedido pertenece al organizador actual
   const { data: pedidoRaw } = await supabase
     .from("pedidos_pago")
-    .select("torneos(organizador_id), inscripciones(torneos(organizador_id))")
+    .select("torneo_id, torneos(organizador_id), inscripciones(torneo_id, torneos(organizador_id))")
     .eq("id", pedidoId)
     .maybeSingle();
   const pedido = pedidoRaw as unknown as {
+    torneo_id: string | null;
     torneos: { organizador_id: string | null } | null;
-    inscripciones: { torneos: { organizador_id: string | null } | null }[];
+    inscripciones: { torneo_id: string; torneos: { organizador_id: string | null } | null }[];
   } | null;
 
   if (!pedido || (organizadorIdActual && !organizadoresDelPedido(pedido).includes(organizadorIdActual))) {
@@ -143,6 +145,17 @@ export async function rechazarPago(pedidoId: string) {
 
   await supabase.from("pedidos_pago").update({ estado: "cancelado" }).eq("id", pedidoId);
   await supabase.from("inscripciones").update({ estado: "cancelada" }).eq("pedido_pago_id", pedidoId);
+
+  // La cancelación puede haber liberado cupo en uno o varios torneos (un
+  // pedido puede llevar inscripciones de varios torneos en carrito).
+  const torneoIds = new Set(
+    [pedido.torneo_id, ...pedido.inscripciones.map((i) => i.torneo_id)].filter(
+      (id): id is string => id != null,
+    ),
+  );
+  for (const torneoId of torneoIds) {
+    await promoverSiguienteAutomatico(supabase, torneoId);
+  }
 
   revalidatePath("/admin/pedidos");
 }

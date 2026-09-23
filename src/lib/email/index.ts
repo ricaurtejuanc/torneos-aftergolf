@@ -157,6 +157,32 @@ export async function enviarEmailInscripcionRecibida(args: {
   return await enviar(args.destinatario, asunto, html, args.organizador);
 }
 
+export async function enviarEmailListaEspera(args: {
+  destinatario: string;
+  nombre: string;
+  torneoNombre: string;
+  torneoFecha: string;
+  organizador?: OrganizadorEmailInfo | null;
+}) {
+  const html = envoltorio(
+    "Estás en lista de espera",
+    `
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">Hola ${args.nombre},</p>
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">
+        El cupo de <strong>${args.torneoNombre}</strong> (${formatearFecha(args.torneoFecha)})
+        está completo, así que te hemos apuntado a la <strong>lista de espera</strong>. Si se
+        libera una plaza, te avisaremos por email para que puedas confirmarla.
+      </p>
+      <p style="color: #6b7a6f; font-size: 13px; line-height: 1.5;">
+        No hace falta que hagas nada más por ahora — de momento no se te ha cobrado nada.
+      </p>
+    `,
+    args.organizador,
+  );
+
+  return await enviar(args.destinatario, `Estás en lista de espera para ${args.torneoNombre}`, html, args.organizador);
+}
+
 export async function enviarEmailNuevaConsulta(args: {
   nombre: string;
   email: string;
