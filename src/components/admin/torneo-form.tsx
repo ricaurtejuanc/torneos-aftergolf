@@ -201,6 +201,19 @@ export function TorneoForm({
             defaultValue={torneo?.cupo_maximo ?? ""}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
+          <label className="mt-2 flex items-center gap-2 text-xs text-ajag-gris-500">
+            <input
+              type="checkbox"
+              name="lista_espera_automatica"
+              defaultChecked={torneo?.lista_espera_automatica ?? false}
+            />
+            Cubrir plazas liberadas automáticamente (por orden de llegada)
+          </label>
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Con el cupo lleno, la web deja apuntarse a una lista de espera en vez de bloquear la
+            inscripción. Desmarcado, tú eliges a mano quién cubre cada plaza que se libere, desde
+            Inscritos.
+          </p>
         </div>
       </div>
 
@@ -367,6 +380,25 @@ export function TorneoForm({
       </div>
 
       <div>
+        <label htmlFor="normas" className="block text-sm font-medium text-ajag-verde-900">
+          Normas del torneo
+        </label>
+        <textarea
+          id="normas"
+          name="normas"
+          rows={6}
+          placeholder="Reglas de juego, desempates, condiciones de campo..."
+          defaultValue={torneo?.normas ?? ""}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Texto tan largo como haga falta. En la ficha pública del torneo se muestra en una
+          ventana emergente, no en la página en sí. Si lo dejas vacío, esa ventana avisa de que
+          el torneo no tiene normas específicas.
+        </p>
+      </div>
+
+      <div>
         <span className="text-sm font-medium text-ajag-verde-900">
           Extras que se mostrarán en la ficha del torneo
         </span>
@@ -426,6 +458,23 @@ export function TorneoForm({
             className="mt-2 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         ) : null}
+      </div>
+
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-ajag-verde-900">
+          <input
+            type="checkbox"
+            name="gestion_whatsapp"
+            defaultChecked={torneo?.gestion_whatsapp ?? false}
+          />
+          Gestionar inscripciones por WhatsApp
+        </label>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Muestra en el formulario de inscripción de este torneo, en rojo, la opción de gestionar
+          la inscripción por WhatsApp al teléfono configurado en Configuración. Los ingresos de
+          este torneo se añaden entonces a mano en su Economía (categoría &quot;Inscripciones
+          cobradas aparte&quot;).
+        </p>
       </div>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}

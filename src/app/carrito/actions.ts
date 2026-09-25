@@ -37,13 +37,12 @@ export async function finalizarPedido(
     return { ok: false, error: "Método de pago inválido." };
   }
 
-  const organizadorId = await obtenerOrganizadorIdActual();
-  const { data: jugador } = await supabase
-    .from("jugadores")
-    .select("id, nombre, email")
-    .eq("user_id", user.id)
-    .eq("organizador_id", organizadorId as string)
-    .maybeSingle();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let jugadorQuery = supabase.from("jugadores").select("id, nombre, email").eq("user_id", user.id);
+  jugadorQuery = organizadorIdActual
+    ? jugadorQuery.eq("organizador_id", organizadorIdActual)
+    : jugadorQuery.is("organizador_id", null);
+  const { data: jugador } = await jugadorQuery.maybeSingle();
   if (!jugador) redirect("/carrito");
 
   const { data: itemsData } = await supabase

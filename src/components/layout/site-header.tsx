@@ -22,13 +22,12 @@ export async function SiteHeader() {
   const organizador = await obtenerOrganizadorActual();
 
   let itemsCarrito = 0;
-  if (user && organizador) {
-    const { data: jugador } = await supabase
-      .from("jugadores")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("organizador_id", organizador.id)
-      .maybeSingle();
+  if (user) {
+    let jugadorQuery = supabase.from("jugadores").select("id").eq("user_id", user.id);
+    jugadorQuery = organizador
+      ? jugadorQuery.eq("organizador_id", organizador.id)
+      : jugadorQuery.is("organizador_id", null);
+    const { data: jugador } = await jugadorQuery.maybeSingle();
     if (jugador) {
       const { count } = await supabase
         .from("inscripciones")

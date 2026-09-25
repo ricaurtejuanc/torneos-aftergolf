@@ -2,30 +2,83 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
-import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
+import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { promoverSiguienteAutomatico } from "@/lib/data/lista-espera";
+
+// Borra el pedido y las inscripciones que llevaba, sin dejar rastro en el
+// historial. Solo la usa eliminarPedido (limpiar duplicados/pruebas):
+// rechazarPago cancela en vez de borrar, ver más abajo.
+//
+// Se borra el pedido antes que sus inscripciones (la FK `on delete set
+// null` en inscripciones.pedido_pago_id limpia esa columna sin pasar por
+// RLS) y solo entonces se borran las inscripciones por id: si se hiciera
+// al revés, un pedido cuya única vía de organizador fueran esas
+// inscripciones se quedaría sin forma de autorizar su propio delete.
+async function borrarPedidoYInscripciones(supabase: SupabaseClient, pedidoId: string) {
+  const { data: inscripciones } = await supabase
+    .from("inscripciones")
+    .select("id")
+    .eq("pedido_pago_id", pedidoId);
+
+  await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
+
+  const ids = (inscripciones ?? []).map((i) => i.id);
+  if (ids.length > 0) {
+    await supabase.from("inscripciones").delete().in("id", ids);
+  }
+}
+
+// pedidos_pago puede llevar su organizador de dos formas: por su propio
+// torneo_id (pedidos nuevos, desde "pagos por torneo"), o por el torneo de
+// sus inscripciones (pedidos antiguos, o uno cuyas inscripciones ya se
+// borraron pero el registro del torneo sigue). Hay que comprobar las dos
+// vías — comprobar solo una bloqueaba en falso pedidos legítimos que no
+// tenían esa vía concreta rellena (justo lo que impedía borrar pagos desde
+// el admin).
+function organizadoresDelPedido(pedido: {
+  torneos?: { organizador_id: string | null } | null;
+  inscripciones?: { torneos?: { organizador_id: string | null } | null } | { torneos?: { organizador_id: string | null } | null }[] | null;
+}): (string | null | undefined)[] {
+  const inscripciones = Array.isArray(pedido.inscripciones)
+    ? pedido.inscripciones
+    : pedido.inscripciones
+      ? [pedido.inscripciones]
+      : [];
+  return [pedido.torneos?.organizador_id, ...inscripciones.map((i) => i.torneos?.organizador_id)];
+}
 
 export async function confirmarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
 
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
 
   const { data: pedidoDataRaw } = await supabase
     .from("pedidos_pago")
     .select(
-      "inscripciones(precio_cents, torneos(nombre, fecha, organizador_id), jugadores(nombre, email))",
+      "torneos(organizador_id), inscripciones(precio_cents, torneos(nombre, fecha, organizador_id), jugadores(nombre, email))",
     )
     .eq("id", pedidoId)
     .maybeSingle();
   const pedidoData = pedidoDataRaw as unknown as {
+    torneos: { organizador_id: string | null } | null;
     inscripciones: {
       precio_cents: number;
       torneos: { nombre: string; fecha: string; organizador_id: string | null } | null;
       jugadores: { nombre: string; email: string | null } | null;
     }[];
   } | null;
+
+  if (
+    !pedidoData?.inscripciones?.[0] ||
+    (organizadorIdActual && !organizadoresDelPedido(pedidoData).includes(organizadorIdActual))
+  ) {
+    return;
+  }
 
   await supabase
     .from("pedidos_pago")
@@ -63,52 +116,74 @@ export async function confirmarPago(pedidoId: string) {
   revalidatePath("/admin/pedidos");
 }
 
+// Marca el pedido (y sus inscripciones) como cancelado, no lo borra: debe
+// quedar en el historial como "Cancelado" igual que "Cancelar" en la
+// pantalla de inscritos de un torneo. torneos_cupo excluye "cancelada" del
+// recuento, así que la plaza se libera sola sin tocar nada más.
 export async function rechazarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
 
   const supabase = await createClient();
-  await supabase
-    .from("pedidos_pago")
-    .update({ estado: "rechazado", confirmado_por: admin.id })
-    .eq("id", pedidoId);
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
 
-  await supabase
-    .from("inscripciones")
-    .update({ estado: "cancelada" })
-    .eq("pedido_pago_id", pedidoId);
+  // Validar que el pedido pertenece al organizador actual
+  const { data: pedidoRaw } = await supabase
+    .from("pedidos_pago")
+    .select("torneo_id, torneos(organizador_id), inscripciones(torneo_id, torneos(organizador_id))")
+    .eq("id", pedidoId)
+    .maybeSingle();
+  const pedido = pedidoRaw as unknown as {
+    torneo_id: string | null;
+    torneos: { organizador_id: string | null } | null;
+    inscripciones: { torneo_id: string; torneos: { organizador_id: string | null } | null }[];
+  } | null;
+
+  if (!pedido || (organizadorIdActual && !organizadoresDelPedido(pedido).includes(organizadorIdActual))) {
+    return;
+  }
+
+  await supabase.from("pedidos_pago").update({ estado: "cancelado" }).eq("id", pedidoId);
+  await supabase.from("inscripciones").update({ estado: "cancelada" }).eq("pedido_pago_id", pedidoId);
+
+  // La cancelación puede haber liberado cupo en uno o varios torneos (un
+  // pedido puede llevar inscripciones de varios torneos en carrito).
+  const torneoIds = new Set(
+    [pedido.torneo_id, ...pedido.inscripciones.map((i) => i.torneo_id)].filter(
+      (id): id is string => id != null,
+    ),
+  );
+  for (const torneoId of torneoIds) {
+    await promoverSiguienteAutomatico(supabase, torneoId);
+  }
 
   revalidatePath("/admin/pedidos");
 }
 
-// Borra el pedido y las inscripciones que llevaba (un pedido sin
-// inscripciones no tiene sentido guardarlo, y dejarlas huérfanas ocuparía
-// cupo sin un pago detrás) — para limpiar pedidos duplicados o de prueba.
-//
-// Orden importante: la policy de borrado de pedidos_pago comprueba el
-// organizador vía sus inscripciones (pedidos_pago no tiene organizador_id
-// propio). Si se borraran las inscripciones primero, esa comprobación ya
-// no encontraría ninguna y el delete del pedido quedaría bloqueado por RLS
-// sin dar error — el pedido se quedaba huérfano en vez de desaparecer. Por
-// eso primero se capturan los ids de las inscripciones, se borra el
-// pedido (la FK `on delete set null` limpia pedido_pago_id sin pasar por
-// RLS) y solo entonces se borran las inscripciones por id.
+// Para limpiar pedidos duplicados o de prueba desde el historial.
 export async function eliminarPedido(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
 
   const supabase = await createClient();
-  const { data: inscripciones } = await supabase
-    .from("inscripciones")
-    .select("id")
-    .eq("pedido_pago_id", pedidoId);
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
 
-  await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
+  // Validar que el pedido pertenece al organizador actual
+  const { data: pedidoRaw } = await supabase
+    .from("pedidos_pago")
+    .select("torneos(organizador_id), inscripciones(torneos(organizador_id))")
+    .eq("id", pedidoId)
+    .maybeSingle();
+  const pedido = pedidoRaw as unknown as {
+    torneos: { organizador_id: string | null } | null;
+    inscripciones: { torneos: { organizador_id: string | null } | null }[];
+  } | null;
 
-  const ids = (inscripciones ?? []).map((i) => i.id);
-  if (ids.length > 0) {
-    await supabase.from("inscripciones").delete().in("id", ids);
+  if (!pedido || (organizadorIdActual && !organizadoresDelPedido(pedido).includes(organizadorIdActual))) {
+    return;
   }
+
+  await borrarPedidoYInscripciones(supabase, pedidoId);
 
   revalidatePath("/admin/pedidos");
 }

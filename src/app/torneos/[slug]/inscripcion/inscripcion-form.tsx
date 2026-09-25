@@ -14,12 +14,16 @@ export function InscripcionForm({
   precioCents,
   precioSocioCents,
   pagaEnClub,
+  whatsappTelefono,
+  listaEspera,
 }: {
   torneoSlug: string;
   jugador: Jugador | null;
   precioCents: number;
   precioSocioCents: number | null;
   pagaEnClub: boolean;
+  whatsappTelefono?: string | null;
+  listaEspera?: boolean;
 }) {
   const accionConSlug = inscribirse.bind(null, torneoSlug);
   const [state, formAction, pending] = useActionState<EstadoInscripcionForm, FormData>(
@@ -85,11 +89,22 @@ export function InscripcionForm({
             Licencia federativa {sinLicencia ? "" : "*"}
           </label>
           {sinLicencia ? (
-            <p className="mt-1 w-full rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm text-ajag-gris-500">
-              {jugador?.licencia_federativa?.startsWith("AJAG")
-                ? jugador.licencia_federativa
-                : "Se generará automáticamente al confirmar"}
-            </p>
+            // Sin "name": el valor es solo informativo (se genera en el
+            // servidor, ver actions.ts), así que no debe ir en el FormData.
+            // readOnly y no disabled: un campo disabled queda fuera del
+            // FormData igualmente, pero además rompería el desplazamiento
+            // de índices si este patrón se copia alguna vez a una tabla
+            // dinámica (ver CLAUDE.md).
+            <input
+              id="licencia_federativa"
+              readOnly
+              value={
+                jugador?.licencia_federativa?.startsWith("AJAG")
+                  ? jugador.licencia_federativa
+                  : "Se generará automáticamente al confirmar"
+              }
+              className="mt-1 w-full cursor-not-allowed rounded-xl border border-ajag-gris-200 bg-ajag-gris-100 px-4 py-2.5 text-sm text-ajag-gris-500 outline-none"
+            />
           ) : (
             <input
               id="licencia_federativa"
@@ -250,7 +265,9 @@ export function InscripcionForm({
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 
       <div className="flex items-center justify-between border-t border-ajag-gris-100 pt-4">
-        <span className="text-sm text-ajag-gris-500">Precio de la inscripción</span>
+        <span className="text-sm text-ajag-gris-500">
+          {listaEspera ? "Precio si se libera tu plaza" : "Precio de la inscripción"}
+        </span>
         <span className="font-display text-lg font-semibold text-ajag-verde-900">
           {formatearPrecio(precioMostrado)}
         </span>
@@ -259,16 +276,38 @@ export function InscripcionForm({
       <button
         type="submit"
         disabled={pending}
-        className="rounded-xl bg-ajag-verde-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        className={`rounded-xl px-5 py-3 text-sm font-medium text-white transition disabled:opacity-60 ${
+          listaEspera
+            ? "bg-ajag-oro-600 hover:bg-ajag-oro-500"
+            : "bg-ajag-verde-700 hover:bg-ajag-verde-600"
+        }`}
       >
-        {jugador && !pagaEnClub
+        {listaEspera
           ? pending
-            ? "Añadiendo..."
-            : "Añadir al carrito"
-          : pending
-            ? "Enviando..."
-            : "Confirmar inscripción"}
+            ? "Apuntando..."
+            : "Apuntarme a la lista de espera"
+          : jugador && !pagaEnClub
+            ? pending
+              ? "Añadiendo..."
+              : "Añadir al carrito"
+            : pending
+              ? "Enviando..."
+              : "Confirmar inscripción"}
       </button>
+
+      {whatsappTelefono ? (
+        <button
+          type="button"
+          onClick={() =>
+            alert(
+              `Las inscripciones de este torneo se gestionan vía WhatsApp en el teléfono ${whatsappTelefono}.`,
+            )
+          }
+          className="text-center text-sm font-medium text-ajag-rojo-600 hover:underline"
+        >
+          Gestionar la inscripción fuera de la web vía WhatsApp
+        </button>
+      ) : null}
     </form>
   );
 }

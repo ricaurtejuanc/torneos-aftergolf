@@ -48,6 +48,7 @@ function leerCamposTorneo(formData: FormData) {
     nombre,
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     info_adicional: String(formData.get("info_adicional") ?? "").trim() || null,
+    normas: String(formData.get("normas") ?? "").trim() || null,
     campo_golf: String(formData.get("campo_golf") ?? "").trim(),
     recorrido: String(formData.get("recorrido") ?? "").trim() || null,
     tees_masculino: leerTees("tees_masculino"),
@@ -62,6 +63,7 @@ function leerCamposTorneo(formData: FormData) {
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
+    lista_espera_automatica: formData.get("lista_espera_automatica") === "on",
     formato_puntuacion: String(formData.get("formato_puntuacion") ?? "stableford") as FormatoPuntuacion,
     modo_juego: String(formData.get("modo_juego") ?? "individual") as ModoJuego,
     modo_salida: String(formData.get("modo_salida") ?? "consecutivo") as ModoSalida,
@@ -74,6 +76,7 @@ function leerCamposTorneo(formData: FormData) {
     modo_pago: String(formData.get("modo_pago") ?? "organizador") as ModoPagoTorneo,
     extras,
     inscripcion_url_externa: String(formData.get("inscripcion_url_externa") ?? "").trim() || null,
+    gestion_whatsapp: formData.get("gestion_whatsapp") === "on",
   };
 }
 

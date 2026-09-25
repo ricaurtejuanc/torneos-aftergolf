@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
+import { obtenerWhatsappTelefono } from "@/lib/data/configuracion";
 import { formatearFecha } from "@/lib/format";
 import { InscripcionForm } from "./inscripcion-form";
 
@@ -29,6 +30,7 @@ export default async function InscripcionPage({
   } = await supabase.auth.getUser();
 
   const jugador = user ? await asegurarJugadorParaUsuario(supabase, user) : null;
+  const whatsappTelefono = torneo.gestion_whatsapp ? await obtenerWhatsappTelefono() : null;
 
   let lleno = false;
   if (torneo.cupo_maximo != null) {
@@ -51,24 +53,6 @@ export default async function InscripcionPage({
     }
   }
 
-  if (lleno) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-10">
-        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-          ← Volver al torneo
-        </Link>
-        <div className="card-ajag mt-6 p-8 text-center">
-          <h1 className="font-display text-xl font-semibold text-ajag-verde-900">
-            Cupo completo
-          </h1>
-          <p className="mt-2 text-sm text-ajag-gris-500">
-            Ya no quedan plazas disponibles para {torneo.nombre}.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
       <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
@@ -82,7 +66,12 @@ export default async function InscripcionPage({
         {formatearFecha(torneo.fecha)} · {torneo.campo_golf}
       </p>
 
-      {torneo.modo_pago === "club" ? (
+      {lleno ? (
+        <p className="mt-3 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-600">
+          El cupo de este torneo está completo: al inscribirte, quedarás en lista de espera y te
+          avisaremos por email si se libera una plaza.
+        </p>
+      ) : torneo.modo_pago === "club" ? (
         <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-3 text-sm text-ajag-verde-900">
           Este torneo se paga en el club: tu inscripción quedará confirmada
           al momento, sin esperar a que confirmemos ningún pago.
@@ -112,6 +101,8 @@ export default async function InscripcionPage({
           precioCents={torneo.precio_cents}
           precioSocioCents={torneo.precio_socio_cents}
           pagaEnClub={torneo.modo_pago === "club"}
+          whatsappTelefono={whatsappTelefono}
+          listaEspera={lleno}
         />
       </div>
     </div>

@@ -157,6 +157,71 @@ export async function enviarEmailInscripcionRecibida(args: {
   return await enviar(args.destinatario, asunto, html, args.organizador);
 }
 
+export async function enviarEmailListaEspera(args: {
+  destinatario: string;
+  nombre: string;
+  torneoNombre: string;
+  torneoFecha: string;
+  organizador?: OrganizadorEmailInfo | null;
+}) {
+  const html = envoltorio(
+    "Estás en lista de espera",
+    `
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">Hola ${args.nombre},</p>
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">
+        El cupo de <strong>${args.torneoNombre}</strong> (${formatearFecha(args.torneoFecha)})
+        está completo, así que te hemos apuntado a la <strong>lista de espera</strong>. Si se
+        libera una plaza, te avisaremos por email para que puedas confirmarla.
+      </p>
+      <p style="color: #6b7a6f; font-size: 13px; line-height: 1.5;">
+        No hace falta que hagas nada más por ahora — de momento no se te ha cobrado nada.
+      </p>
+    `,
+    args.organizador,
+  );
+
+  return await enviar(args.destinatario, `Estás en lista de espera para ${args.torneoNombre}`, html, args.organizador);
+}
+
+export async function enviarEmailPlazaLiberada(args: {
+  destinatario: string;
+  nombre: string;
+  torneoNombre: string;
+  torneoFecha: string;
+  precioCents: number;
+  urlPago: string;
+  organizador?: OrganizadorEmailInfo | null;
+}) {
+  const html = envoltorio(
+    "¡Tienes plaza!",
+    `
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">Hola ${args.nombre},</p>
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">
+        Se ha liberado una plaza en <strong>${args.torneoNombre}</strong>
+        (${formatearFecha(args.torneoFecha)}) y te la hemos asignado a ti por
+        estar en lista de espera. Solo falta el pago
+        (${formatearPrecio(args.precioCents)}) para dejarla confirmada.
+      </p>
+      <p style="text-align: center; margin: 20px 0 8px;">
+        <a
+          href="${args.urlPago}"
+          style="display: inline-block; background: #1f4d33; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;"
+        >
+          Pagar y confirmar plaza
+        </a>
+      </p>
+    `,
+    args.organizador,
+  );
+
+  return await enviar(
+    args.destinatario,
+    `¡Se ha liberado tu plaza en ${args.torneoNombre}!`,
+    html,
+    args.organizador,
+  );
+}
+
 export async function enviarEmailNuevaConsulta(args: {
   nombre: string;
   email: string;

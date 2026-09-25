@@ -25,13 +25,12 @@ export default async function CarritoPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/carrito");
 
-  const organizadorId = await obtenerOrganizadorIdActual();
-  const { data: jugador } = await supabase
-    .from("jugadores")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("organizador_id", organizadorId as string)
-    .maybeSingle();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let jugadorQuery = supabase.from("jugadores").select("id").eq("user_id", user.id);
+  jugadorQuery = organizadorIdActual
+    ? jugadorQuery.eq("organizador_id", organizadorIdActual)
+    : jugadorQuery.is("organizador_id", null);
+  const { data: jugador } = await jugadorQuery.maybeSingle();
 
   const items = jugador ? await obtenerCarrito(jugador.id) : [];
   const total = items.reduce((acc, item) => acc + item.precio_cents, 0);

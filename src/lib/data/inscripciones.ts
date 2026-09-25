@@ -38,7 +38,9 @@ interface InscripcionDetalladaRaw {
 /**
  * Lista completa de inscritos de un torneo (para el panel de admin), con
  * todos los estados salvo "carrito" (carritos sin terminar no son
- * inscripciones reales). Pensada para verse en tabla y exportarse a XLS.
+ * inscripciones reales) y "en_lista_espera" (esa va aparte, ver
+ * `listarListaEspera` en `lista-espera.ts`). Pensada para verse en tabla y
+ * exportarse a XLS.
  */
 export async function listarInscritosDetallados(torneoId: string): Promise<InscritoDetallado[]> {
   const supabase = await createClient();
@@ -48,7 +50,7 @@ export async function listarInscritosDetallados(torneoId: string): Promise<Inscr
       "id, sexo, licencia_federativa, handicap_snapshot, es_socio, precio_cents, estado, created_at, jugadores(nombre, apellidos, email, telefono, handicap, sexo, licencia_federativa)",
     )
     .eq("torneo_id", torneoId)
-    .neq("estado", "carrito")
+    .not("estado", "in", "(carrito,en_lista_espera)")
     .order("created_at", { ascending: true });
 
   const filas = (data ?? []) as unknown as InscripcionDetalladaRaw[];

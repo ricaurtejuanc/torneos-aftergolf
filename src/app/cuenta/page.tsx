@@ -6,12 +6,16 @@ import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { conReintentos } from "@/lib/supabase/retry";
 import { SignOutButton } from "./sign-out-button";
 import { PedidosList } from "./pedidos-list";
 import { RondasList } from "./rondas-list";
 import { CuentaTabs } from "./tabs";
 import { PerfilEditor } from "./perfil-editor";
 import { listarMisRondas, mediaDifferentials, RONDAS_PARA_MEDIA } from "@/lib/data/rondas";
+import { formatearFechaCorta } from "@/lib/format";
+import { Clock } from "lucide-react";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -33,11 +37,13 @@ export default async function CuentaPage({
   // que incluir los que se inscribieron como invitado antes de tener
   // cuenta (pedido sin user_id) y cuya ficha de jugador se reclamó luego:
   // si no, esas inscripciones desaparecen de "Mis inscripciones".
-  const { data: inscripcionesJugador } = await supabase
-    .from("inscripciones")
-    .select("pedido_pago_id")
-    .eq("jugador_id", jugador.id)
-    .not("pedido_pago_id", "is", null);
+  const { data: inscripcionesJugador } = await conReintentos(() =>
+    supabase
+      .from("inscripciones")
+      .select("pedido_pago_id")
+      .eq("jugador_id", jugador.id)
+      .not("pedido_pago_id", "is", null),
+  );
   const idsPedidosInvitado = [
     ...new Set((inscripcionesJugador ?? []).map((i) => i.pedido_pago_id).filter((id) => id)),
   ];
@@ -47,12 +53,38 @@ export default async function CuentaPage({
       ? `user_id.eq.${user.id},id.in.(${idsPedidosInvitado.join(",")})`
       : `user_id.eq.${user.id}`;
 
-  const [{ data: pedidos }, bizumNumero, rondas] = await Promise.all([
-    supabase
-      .from("pedidos_pago")
-      .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
-      .or(filtro)
-      .order("created_at", { ascending: false }),
+  // Cada organizador es independiente: "Mis inscripciones" en el sitio de
+  // un club no debe mezclar pedidos de pago de otro. pedidos_pago no
+  // guarda organizador_id directamente, así que se filtra por los torneos
+  // del organizador actual.
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let pedidosQuery = supabase
+    .from("pedidos_pago")
+    .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
+    .or(filtro);
+  if (organizadorIdActual) {
+    const { data: torneosOrganizador } = await supabase
+      .from("torneos")
+      .select("id")
+      .eq("organizador_id", organizadorIdActual);
+    const torneoIds = (torneosOrganizador ?? []).map((t) => t.id);
+    pedidosQuery = pedidosQuery.in("torneo_id", torneoIds.length > 0 ? torneoIds : ["-"]);
+  }
+
+  // Un jugador solo puede estar en lista de espera de torneos de SU
+  // organizador (jugador.id ya está acotado a este club, y la inscripción
+  // no deja registrarse en un torneo de otro), así que no hace falta
+  // volver a filtrar por organizador aquí.
+  const listaEsperaQuery = supabase
+    .from("inscripciones")
+    .select("id, created_at, torneos(nombre, slug, fecha)")
+    .eq("jugador_id", jugador.id)
+    .eq("estado", "en_lista_espera")
+    .order("created_at", { ascending: false });
+
+  const [{ data: pedidos }, { data: listaEspera }, bizumNumero, rondas] = await Promise.all([
+    conReintentos(() => pedidosQuery.order("created_at", { ascending: false })),
+    conReintentos(() => listaEsperaQuery),
     obtenerBizumNumero(),
     listarMisRondas(),
   ]);
@@ -81,18 +113,44 @@ export default async function CuentaPage({
 
       <div className="mt-8">
         <CuentaTabs
-          activeTab={inscrito ? "inscripciones" : "datos"}
-          onTabChange={() => {}}
-          children={{
+          defaultTab={inscrito ? "inscripciones" : "datos"}
+          paneles={{
             datos: <PerfilEditor jugador={jugador} />,
             inscripciones: (
               <section>
+                {listaEspera && listaEspera.length > 0 ? (
+                  <div className="mb-4 flex flex-col gap-2">
+                    {(
+                      listaEspera as unknown as {
+                        id: string;
+                        created_at: string;
+                        torneos: { nombre: string; slug: string; fecha: string } | null;
+                      }[]
+                    ).map((e) => (
+                      <div
+                        key={e.id}
+                        className="card-ajag flex items-center gap-3 border-l-4 border-l-ajag-oro-500 p-4"
+                      >
+                        <Clock size={18} className="shrink-0 text-ajag-oro-600" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-ajag-verde-900">
+                            {e.torneos?.nombre ?? "Torneo"}
+                          </p>
+                          <p className="text-xs text-ajag-gris-500">
+                            En lista de espera
+                            {e.torneos ? ` · ${formatearFechaCorta(e.torneos.fecha)}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 {pedidos && pedidos.length > 0 ? (
                   <PedidosList
                     pedidos={pedidos as unknown as ComponentProps<typeof PedidosList>["pedidos"]}
                     bizumNumero={bizumNumero}
                   />
-                ) : (
+                ) : listaEspera && listaEspera.length > 0 ? null : (
                   <div className="card-ajag p-6 text-sm text-ajag-gris-500">
                     Todavía no te has inscrito en ningún torneo.{" "}
                     <Link href="/torneos" className="font-medium text-ajag-verde-700 underline">

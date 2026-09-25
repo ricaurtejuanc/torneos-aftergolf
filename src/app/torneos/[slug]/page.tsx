@@ -7,6 +7,7 @@ import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
 import { PosterLightbox } from "@/components/torneos/poster-lightbox";
+import { NormasModal } from "@/components/torneos/normas-modal";
 import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
 import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 
@@ -32,7 +33,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const torneo = await obtenerTorneoPorSlug(slug);
-  return { title: torneo?.nombre ?? "Torneo" };
+  if (!torneo) return { title: "Torneo" };
+
+  // og:image con el cartel: es lo que hace que compartir el link por
+  // WhatsApp (o cualquier red) muestre una miniatura en vez de un enlace
+  // pelado — wa.me solo manda texto, así que esta es la única vía para
+  // que el cartel "viaje" con el mensaje.
+  const descripcion = `${formatearFecha(torneo.fecha)} · ${torneo.campo_golf}`;
+  return {
+    title: torneo.nombre,
+    description: descripcion,
+    openGraph: {
+      title: torneo.nombre,
+      description: descripcion,
+      images: torneo.poster_url ? [{ url: torneo.poster_url }] : undefined,
+    },
+  };
 }
 
 export default async function TorneoDetallePage({
@@ -202,6 +218,8 @@ export default async function TorneoDetallePage({
           </p>
         </div>
       ) : null}
+
+      <NormasModal normas={torneo.normas} />
 
       {torneo.premios.length > 0 ? (
         <div className="mt-6 card-ajag p-5">

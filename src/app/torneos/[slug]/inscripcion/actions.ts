@@ -4,8 +4,13 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario, generarLicenciaUnica } from "@/lib/data/jugadores";
-import { enviarEmailInscripcionRecibida, enviarEmailInscripcionConfirmada } from "@/lib/email";
+import {
+  enviarEmailInscripcionRecibida,
+  enviarEmailInscripcionConfirmada,
+  enviarEmailListaEspera,
+} from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { conReintentos } from "@/lib/supabase/retry";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -79,6 +84,8 @@ export async function inscribirse(
       ? (jugador.licencia_federativa ?? (await generarLicenciaUnica(supabase)))
       : licenciaEscrita;
 
+    let hayHueco = true;
+    let yaInscritoId: string | null = null;
     if (torneo.cupo_maximo != null) {
       const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
         supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
@@ -89,15 +96,47 @@ export async function inscribirse(
           .eq("jugador_id", jugador.id)
           .maybeSingle(),
       ]);
-      if (!yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
-        return { ok: false, error: "El cupo de este torneo ya está completo." };
-      }
+      yaInscritoId = yaInscrito?.id ?? null;
+      hayHueco = Boolean(yaInscrito) || (cupo?.inscritos ?? 0) < torneo.cupo_maximo;
     }
 
     await supabase
       .from("jugadores")
       .update({ nombre, apellidos, email, licencia_federativa, sexo, handicap })
       .eq("id", jugador.id);
+
+    // Cupo lleno y no tenía ya una plaza: se apunta a la lista de espera en
+    // vez de bloquear la inscripción — sin pedido de pago, no se cobra
+    // nada hasta que se le dé plaza (a mano o automático, ver
+    // lista-espera.ts).
+    if (!hayHueco && !yaInscritoId) {
+      const { error } = await conReintentos(() =>
+        supabase.from("inscripciones").insert({
+          torneo_id: torneo.id,
+          jugador_id: jugador.id,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: "en_lista_espera",
+        }),
+      );
+      if (error) return { ok: false, error: error.message };
+
+      if (email) {
+        await enviarEmailListaEspera({
+          destinatario: email,
+          nombre,
+          torneoNombre: torneo.nombre,
+          torneoFecha: torneo.fecha,
+          organizador,
+        });
+      }
+
+      redirect(`/torneos/${torneoSlug}/inscripcion/lista-espera`);
+    }
 
     // Crear pedido de pago automáticamente
     const { data: pedido, error: errorPedido } = await supabase
@@ -116,20 +155,22 @@ export async function inscribirse(
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
 
-    const { error } = await supabase.from("inscripciones").upsert(
-      {
-        torneo_id: torneo.id,
-        jugador_id: jugador.id,
-        sexo,
-        licencia_federativa,
-        handicap_snapshot: handicap,
-        juega_con_licencias: juegaConLicencias,
-        es_socio: esSocio,
-        precio_cents: precioAplicable,
-        estado: pagaEnClub ? "confirmada" : "pendiente_pago",
-        pedido_pago_id: pedido.id,
-      },
-      { onConflict: "torneo_id,jugador_id" },
+    const { error } = await conReintentos(() =>
+      supabase.from("inscripciones").upsert(
+        {
+          torneo_id: torneo.id,
+          jugador_id: jugador.id,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: pagaEnClub ? "confirmada" : "pendiente_pago",
+          pedido_pago_id: pedido.id,
+        },
+        { onConflict: "torneo_id,jugador_id" },
+      ),
     );
     if (error) return { ok: false, error: error.message };
 
@@ -165,32 +206,33 @@ export async function inscribirse(
   try {
     const admin = createAdminClient();
 
+    let hayHuecoInvitado = true;
     if (torneo.cupo_maximo != null) {
       const { data: cupo } = await admin
         .from("torneos_cupo")
         .select("inscritos")
         .eq("torneo_id", torneo.id)
         .maybeSingle();
-      if ((cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
-        return { ok: false, error: "El cupo de este torneo ya está completo." };
-      }
+      hayHuecoInvitado = (cupo?.inscritos ?? 0) < torneo.cupo_maximo;
     }
 
-    // La licencia federativa es única en `jugadores`. Un invitado que ya
-    // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
-    // chocar con la restricción; si es una cuenta real (user_id no nulo)
-    // no se le pisan sus datos guardados con lo que ha escrito el invitado.
-    // Sin licencia real que buscar, se empareja por email (mismo criterio
-    // que asegurarJugadorParaUsuario usa para reclamar un invitado): si
-    // no, la misma persona sin licencia acababa con una ficha nueva y un
-    // AJAG###### distinto cada vez que se inscribía a otro torneo.
+    // La licencia federativa es única en `jugadores` POR ORGANIZADOR (cada
+    // club lleva su propia ficha de cada jugador). Un invitado que ya jugó
+    // antes en ESTE organizador (como invitado o con cuenta) reutiliza esa
+    // fila en vez de chocar con la restricción; si es una cuenta real
+    // (user_id no nulo) no se le pisan sus datos guardados con lo que ha
+    // escrito el invitado. Sin licencia real que buscar, se empareja por
+    // email (mismo criterio que asegurarJugadorParaUsuario usa para
+    // reclamar un invitado): si no, la misma persona sin licencia acababa
+    // con una ficha nueva y un código distinto cada vez que se inscribía a
+    // otro torneo de ese club.
     const { data: jugadorExistente } = sinLicencia
       ? await admin
           .from("jugadores")
           .select("id, user_id, licencia_federativa")
           .is("user_id", null)
           .eq("email", email)
-          .eq("organizador_id", torneo.organizador_id as string)
+          .eq("organizador_id", torneo.organizador_id ?? "")
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle()
@@ -198,7 +240,7 @@ export async function inscribirse(
           .from("jugadores")
           .select("id, user_id, licencia_federativa")
           .eq("licencia_federativa", licenciaEscrita)
-          .eq("organizador_id", torneo.organizador_id as string)
+          .eq("organizador_id", torneo.organizador_id ?? "")
           .maybeSingle();
 
     let jugadorId: string;
@@ -247,48 +289,82 @@ export async function inscribirse(
       }
     }
 
-    const { data: pedido, error: errorPedido } = await admin
-      .from("pedidos_pago")
-      .insert({
-        user_id: null,
-        torneo_id: torneo.id,
-        metodo_pago: pagaEnClub ? "club" : "bizum",
-        estado: pagaEnClub ? "confirmado" : "pendiente_confirmacion",
-        total_cents: precioAplicable,
-        confirmado_at: pagaEnClub ? new Date().toISOString() : null,
-      })
-      .select("id")
-      .single();
-    if (errorPedido || !pedido) {
-      console.error("Error creando pedido de invitado:", errorPedido);
-      return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
-    }
+    // Cupo lleno: se apunta a la lista de espera en vez de crear un pedido
+    // de pago (ver rama equivalente para usuarios con sesión, arriba).
+    if (!hayHuecoInvitado) {
+      const { error: errorEspera } = await conReintentos(() =>
+        admin.from("inscripciones").insert({
+          torneo_id: torneo.id,
+          jugador_id: jugadorId,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: "en_lista_espera",
+        }),
+      );
+      if (errorEspera) {
+        console.error("Error apuntando a invitado a lista de espera:", errorEspera);
+        return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+      }
 
-    const { error: errorInscripcion } = await admin.from("inscripciones").insert({
-      torneo_id: torneo.id,
-      jugador_id: jugadorId,
-      sexo,
-      licencia_federativa,
-      handicap_snapshot: handicap,
-      juega_con_licencias: juegaConLicencias,
-      es_socio: esSocio,
-      precio_cents: precioAplicable,
-      estado: pagaEnClub ? "confirmada" : "pendiente_pago",
-      pedido_pago_id: pedido.id,
-    });
-    if (errorInscripcion) {
-      console.error("Error creando inscripción de invitado:", errorInscripcion);
-      return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
-    }
+      await enviarEmailListaEspera({
+        destinatario: email,
+        nombre,
+        torneoNombre: torneo.nombre,
+        torneoFecha: torneo.fecha,
+        organizador,
+      });
 
-    const item = { torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable };
-    if (pagaEnClub) {
-      await enviarEmailInscripcionConfirmada({ destinatario: email, nombre, items: [item], organizador });
+      urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/lista-espera`;
     } else {
-      await enviarEmailInscripcionRecibida({ destinatario: email, nombre, items: [item], organizador });
-    }
+      const { data: pedido, error: errorPedido } = await admin
+        .from("pedidos_pago")
+        .insert({
+          user_id: null,
+          torneo_id: torneo.id,
+          metodo_pago: pagaEnClub ? "club" : "bizum",
+          estado: pagaEnClub ? "confirmado" : "pendiente_confirmacion",
+          total_cents: precioAplicable,
+          confirmado_at: pagaEnClub ? new Date().toISOString() : null,
+        })
+        .select("id")
+        .single();
+      if (errorPedido || !pedido) {
+        console.error("Error creando pedido de invitado:", errorPedido);
+        return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+      }
 
-    urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;
+      const { error: errorInscripcion } = await conReintentos(() =>
+        admin.from("inscripciones").insert({
+          torneo_id: torneo.id,
+          jugador_id: jugadorId,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: pagaEnClub ? "confirmada" : "pendiente_pago",
+          pedido_pago_id: pedido.id,
+        }),
+      );
+      if (errorInscripcion) {
+        console.error("Error creando inscripción de invitado:", errorInscripcion);
+        return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+      }
+
+      const item = { torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable };
+      if (pagaEnClub) {
+        await enviarEmailInscripcionConfirmada({ destinatario: email, nombre, items: [item], organizador });
+      } else {
+        await enviarEmailInscripcionRecibida({ destinatario: email, nombre, items: [item], organizador });
+      }
+
+      urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;
+    }
   } catch (err) {
     console.error("Error inesperado en inscripción de invitado:", err);
     return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };

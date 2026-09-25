@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Jugador } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { conReintentos } from "@/lib/supabase/retry";
 
 /**
  * Devuelve el registro de `jugadores` ligado al usuario autenticado,
@@ -11,36 +12,34 @@ export async function asegurarJugadorParaUsuario(
   supabase: SupabaseClient<Database>,
   user: User,
 ): Promise<Jugador> {
-  // Cada organizador tiene su propia ficha de jugador para el mismo usuario
-  // (jugadores.user_id ya no es unique en global, solo por organizador_id),
-  // así que toda esta resolución debe ir acotada al organizador actual: si
-  // no, un usuario con ficha en dos clubes distintos hace que
-  // `.maybeSingle()` reciba más de una fila y falle con un error de servidor.
   const organizadorId = await obtenerOrganizadorIdActual();
 
-  const { data: existente } = await supabase
-    .from("jugadores")
-    .select("*")
-    .eq("user_id", user.id)
-    .eq("organizador_id", organizadorId as string)
-    .maybeSingle();
+  // Cada organizador es independiente: el mismo usuario tiene una ficha de
+  // jugador distinta (nombre, hándicap, licencia...) en cada club, salvo la
+  // ficha de Campos/Tees/Slopes que sí es compartida a nivel de plataforma.
+  let query = supabase.from("jugadores").select("*").eq("user_id", user.id);
+  query = organizadorId ? query.eq("organizador_id", organizadorId) : query.is("organizador_id", null);
+  const { data: existente } = await conReintentos(() => query.maybeSingle());
 
   if (existente) return existente;
 
-  // Si ya se inscribió como invitado antes de tener cuenta, reclama esa
-  // ficha (con su licencia, hándicap, etc.) en vez de crear una duplicada:
-  // si no, el email queda repartido en dos jugadores distintos y la
-  // licencia federativa choca con la restricción unique al rellenarla.
+  // Si ya se inscribió como invitado antes de tener cuenta (en ESTE mismo
+  // organizador), reclama esa ficha (con su licencia, hándicap, etc.) en
+  // vez de crear una duplicada: si no, el email queda repartido en dos
+  // jugadores distintos y la licencia federativa choca con la restricción
+  // unique al rellenarla.
   if (user.email) {
-    const { data: invitado } = await supabase
+    let queryInvitado = supabase
       .from("jugadores")
       .select("*")
       .is("user_id", null)
       .eq("email", user.email)
-      .eq("organizador_id", organizadorId as string)
       .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+    queryInvitado = organizadorId
+      ? queryInvitado.eq("organizador_id", organizadorId)
+      : queryInvitado.is("organizador_id", null);
+    const { data: invitado } = await queryInvitado.maybeSingle();
 
     if (invitado) {
       const { data: reclamado, error: errorReclamo } = await supabase
@@ -60,7 +59,7 @@ export async function asegurarJugadorParaUsuario(
     (user.user_metadata?.full_name as string | undefined) ??
     (user.user_metadata?.name as string | undefined) ??
     user.email?.split("@")[0] ??
-    "Jugador AJAG";
+    "Jugador";
 
   // El registro con Google trae nombre/apellidos ya separados; el registro
   // con email solo pide un campo "Nombre" (nombreCompleto), así que se
@@ -70,32 +69,37 @@ export async function asegurarJugadorParaUsuario(
   const apellidos = familyName ?? nombreCompleto.trim().split(/\s+/).slice(1).join(" ");
   const telefono = (user.user_metadata?.telefono as string | undefined) ?? null;
 
-  const { data: creado, error } = await supabase
-    .from("jugadores")
-    .insert({
-      user_id: user.id,
-      nombre,
-      apellidos,
-      email: user.email ?? null,
-      telefono,
-      organizador_id: organizadorId,
-    })
-    .select("*")
-    .single();
+  // Reintentar un insert es seguro aquí: si el primer intento en realidad
+  // sí llegó a escribir (y solo se perdió la respuesta por un timeout de
+  // PostgREST), el reintento choca con el unique (user_id, organizador_id)
+  // y cae al camino de "ya creado" de abajo en vez de duplicar nada.
+  const { data: creado, error } = await conReintentos(() =>
+    supabase
+      .from("jugadores")
+      .insert({
+        user_id: user.id,
+        nombre,
+        apellidos,
+        email: user.email ?? null,
+        telefono,
+        organizador_id: organizadorId,
+      })
+      .select("*")
+      .single(),
+  );
 
   if (error) {
-    // Otra petición concurrente para el mismo usuario (doble pestaña, doble
-    // navegación antes de que la primera terminase) ganó la carrera y ya
-    // creó su ficha: jugadores.(user_id, organizador_id) es unique, así que
-    // esto no es un fallo real, solo hay que devolver la que ya existe en
-    // vez de duplicarla.
+    // Otra petición concurrente para el mismo usuario en el mismo
+    // organizador (doble pestaña, doble navegación antes de que la primera
+    // terminase) ganó la carrera y ya creó su ficha: jugadores tiene un
+    // unique (user_id, organizador_id), así que esto no es un fallo real,
+    // solo hay que devolver la que ya existe en vez de duplicarla.
     if (error.code === "23505") {
-      const { data: yaCreado } = await supabase
-        .from("jugadores")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("organizador_id", organizadorId as string)
-        .single();
+      let queryYaCreado = supabase.from("jugadores").select("*").eq("user_id", user.id);
+      queryYaCreado = organizadorId
+        ? queryYaCreado.eq("organizador_id", organizadorId)
+        : queryYaCreado.is("organizador_id", null);
+      const { data: yaCreado } = await conReintentos(() => queryYaCreado.single());
       if (yaCreado) return yaCreado;
     }
     throw error;
