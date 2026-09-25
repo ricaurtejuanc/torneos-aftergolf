@@ -231,6 +231,21 @@ per row, one disabled row silently shifts every subsequent row's values onto the
 player. This bit the results form once already; it's a live trap for any similar
 dynamic-table form in this codebase (e.g. the league classification admin panel).
 
+### Legal, cookies, SEO & antispam
+
+- Legal pages (`/aviso-legal`, `/privacidad`, `/cookies`, `/terminos`) are tenant-aware via
+  `obtenerTitularLegal()` (`src/lib/legal.ts`): on the platform domain the titular is AfterGolf;
+  on a club's domain it's that organizador, with razón social/NIF/domicilio taken from the
+  `datos_legales` key in `configuracion` (edited in `/admin/configuracion`). The texts are
+  generic templates — have them reviewed legally before relying on them.
+- Analytics (own `VisitTracker`, Vercel Analytics, Speed Insights) is mounted **only after
+  cookie consent**, via `GestorCookies` (`src/components/legal/gestor-cookies.tsx`); the choice
+  lives in localStorage (`src/lib/consentimiento-cookies.ts`, 12-month validity). Don't mount
+  any new tracking script directly in the layout — put it behind that consent check.
+- `sitemap.ts`/`robots.ts` are built per request from the `Host` (one sitemap per tenant domain).
+- Public forms use `<CamposAntispam />` (honeypot + load timestamp) checked server-side with
+  `esEnvioSospechoso()` (`src/lib/antispam.ts`) — add both to any new public form.
+
 ### Database & migrations
 
 `supabase/migrations/*.sql` is the source of truth for schema, applied in numeric-prefix

@@ -1,9 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { Plus, X } from "lucide-react";
 import { inscribirse, type EstadoInscripcionForm } from "./actions";
 import { formatearPrecio } from "@/lib/format";
+import { CamposAntispam } from "@/components/antispam/campos-antispam";
 import type { Jugador } from "@/types/database";
 
 const MAX_ACOMPANANTES = 3;
@@ -43,6 +45,7 @@ export function InscripcionForm({
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
+      <CamposAntispam />
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="nombre" className="block text-sm font-medium text-ajag-verde-900">
@@ -272,6 +275,18 @@ export function InscripcionForm({
           {formatearPrecio(precioMostrado)}
         </span>
       </div>
+
+      <p className="text-xs text-ajag-gris-500">
+        Al inscribirte aceptas los{" "}
+        <Link href="/terminos" target="_blank" className="text-ajag-verde-700 underline">
+          Términos y condiciones
+        </Link>{" "}
+        y la{" "}
+        <Link href="/privacidad" target="_blank" className="text-ajag-verde-700 underline">
+          Política de privacidad
+        </Link>
+        , incluida la publicación de tu nombre, hándicap y resultado en horarios y clasificaciones.
+      </p>
 
       <button
         type="submit"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
+import { BotonConfigurarCookies } from "@/components/legal/boton-configurar-cookies";
 
 export async function SiteFooter() {
   const organizador = await obtenerOrganizadorActual();
@@ -45,6 +46,13 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-ajag-gris-100 px-4 py-4 text-center text-xs text-ajag-gris-500">
+        <nav className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <Link href="/aviso-legal" className="hover:text-ajag-verde-700 hover:underline">Aviso legal</Link>
+          <Link href="/privacidad" className="hover:text-ajag-verde-700 hover:underline">Privacidad</Link>
+          <Link href="/cookies" className="hover:text-ajag-verde-700 hover:underline">Cookies</Link>
+          <Link href="/terminos" className="hover:text-ajag-verde-700 hover:underline">Términos y condiciones</Link>
+          <BotonConfigurarCookies className="hover:text-ajag-verde-700 hover:underline" />
+        </nav>
         © {new Date().getFullYear()} {organizador?.nombre ?? "AJAG Golf"}. Todos los derechos reservados.
         <br />
         Powered by{" "}
