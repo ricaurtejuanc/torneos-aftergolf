@@ -11,6 +11,7 @@ import {
 } from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { conReintentos } from "@/lib/supabase/retry";
+import { esEnvioSospechoso } from "@/lib/antispam";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -19,6 +20,12 @@ export async function inscribirse(
   _prevState: EstadoInscripcionForm,
   formData: FormData,
 ): Promise<EstadoInscripcionForm> {
+  // Solo el campo trampa, sin tiempo mínimo: a un usuario con sesión el
+  // formulario le llega ya relleno y puede enviarlo en un par de segundos.
+  if (esEnvioSospechoso(formData)) {
+    return { ok: false, error: "No se ha podido enviar la inscripción. Recarga la página e inténtalo de nuevo." };
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

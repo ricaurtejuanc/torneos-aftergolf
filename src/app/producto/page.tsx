@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import {
   CalendarDays,
   Trophy,
@@ -183,6 +184,16 @@ export default function ProductoLandingPage() {
           Escríbenos
         </a>
       </section>
+
+      <footer className="border-t border-aftergolf-verde-900/10 px-4 py-6 text-center text-xs text-aftergolf-verde-800/70">
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <Link href="/aviso-legal" className="hover:underline">Aviso legal</Link>
+          <Link href="/privacidad" className="hover:underline">Privacidad</Link>
+          <Link href="/cookies" className="hover:underline">Cookies</Link>
+          <Link href="/terminos" className="hover:underline">Términos y condiciones</Link>
+        </nav>
+        <p className="mt-2">© {new Date().getFullYear()} AfterGolf Torneos</p>
+      </footer>
     </div>
   );
 }

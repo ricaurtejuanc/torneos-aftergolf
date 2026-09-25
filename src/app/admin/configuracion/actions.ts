@@ -147,3 +147,36 @@ export async function actualizarCategoriasExtras(
   revalidatePath("/torneos", "layout");
   return { ok: true, error: null };
 }
+
+export async function actualizarDatosLegales(
+  _prevState: EstadoConfiguracion,
+  formData: FormData,
+): Promise<EstadoConfiguracion> {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
+
+  const datos = {
+    razon_social: String(formData.get("razon_social") ?? "").trim(),
+    nif: String(formData.get("nif") ?? "").trim().toUpperCase(),
+    domicilio: String(formData.get("domicilio") ?? "").trim(),
+  };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("configuracion").upsert(
+    {
+      clave: "datos_legales",
+      organizador_id: admin.organizador_id,
+      valor: datos,
+      actualizado_por: admin.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organizador_id,clave" },
+  );
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/aviso-legal");
+  revalidatePath("/privacidad");
+  return { ok: true, error: null };
+}
