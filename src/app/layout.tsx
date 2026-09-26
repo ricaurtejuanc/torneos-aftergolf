@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { VisitTracker } from "@/components/analytics/visit-tracker";
+import { GestorCookies } from "@/components/legal/gestor-cookies";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { generarEscalaVerde } from "@/lib/color";
 
@@ -82,12 +80,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             }}
           />
         ) : null}
-        <VisitTracker />
         {ocultarCabeceraAjag ? null : <SiteHeader />}
         <main className="flex-1">{children}</main>
         {ocultarCabeceraAjag ? null : <SiteFooter />}
-        <Analytics />
-        <SpeedInsights />
+        <GestorCookies />
       </body>
     </html>
   );

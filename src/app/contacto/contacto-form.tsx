@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { enviarConsulta, type EstadoContacto } from "./actions";
+import { CamposAntispam } from "@/components/antispam/campos-antispam";
 
 export function ContactoForm() {
   const [state, formAction, pending] = useActionState<EstadoContacto, FormData>(
@@ -19,6 +20,7 @@ export function ContactoForm() {
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-4 p-6">
+      <CamposAntispam />
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
@@ -28,6 +30,8 @@ export function ContactoForm() {
             id="nombre"
             name="nombre"
             required
+            maxLength={120}
+            autoComplete="name"
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -40,6 +44,8 @@ export function ContactoForm() {
             name="email"
             type="email"
             required
+            maxLength={200}
+            autoComplete="email"
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -52,6 +58,9 @@ export function ContactoForm() {
         <input
           id="telefono"
           name="telefono"
+          type="tel"
+          maxLength={30}
+          autoComplete="tel"
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
       </div>
@@ -64,6 +73,8 @@ export function ContactoForm() {
           id="mensaje"
           name="mensaje"
           required
+          minLength={10}
+          maxLength={5000}
           rows={5}
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
