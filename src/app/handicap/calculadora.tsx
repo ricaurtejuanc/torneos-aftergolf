@@ -536,8 +536,11 @@ export function CalculadoraHandicap({
                     resultado.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                {/* En móvil, una columna: un input de fecha tiene un ancho
+                    mínimo propio (sobre todo en iOS) y en media columna se
+                    salía del recuadro. */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label htmlFor="pcc" className={claseEtiqueta}>
                       Ajuste PCC
                     </label>
@@ -553,7 +556,7 @@ export function CalculadoraHandicap({
                       Normalmente 0; solo si el club lo comunica.
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="fecha" className={claseEtiqueta}>
                       Fecha
                     </label>
@@ -563,7 +566,7 @@ export function CalculadoraHandicap({
                       type="date"
                       value={fecha}
                       onChange={(e) => setFecha(e.target.value)}
-                      className={claseCampo}
+                      className={`${claseCampo} block min-w-0 appearance-none text-left [&::-webkit-date-and-time-value]:text-left`}
                     />
                   </div>
                 </div>
