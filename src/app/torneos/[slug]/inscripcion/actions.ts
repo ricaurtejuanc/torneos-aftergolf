@@ -98,13 +98,20 @@ export async function inscribirse(
         supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
         supabase
           .from("inscripciones")
-          .select("id")
+          .select("id, estado")
           .eq("torneo_id", torneo.id)
           .eq("jugador_id", jugador.id)
           .maybeSingle(),
       ]);
       yaInscritoId = yaInscrito?.id ?? null;
-      hayHueco = Boolean(yaInscrito) || (cupo?.inscritos ?? 0) < torneo.cupo_maximo;
+      // Solo cuenta como "ya tenía plaza" si su inscripción ocupa cupo: quien
+      // está en lista de espera y vuelve a enviar el formulario no se salta
+      // la cola (la base de datos también lo impide, ver migración 070).
+      const ocupaPlaza = yaInscrito?.estado === "pendiente_pago" || yaInscrito?.estado === "confirmada";
+      hayHueco = ocupaPlaza || (cupo?.inscritos ?? 0) < torneo.cupo_maximo;
+      if (!hayHueco && yaInscrito?.estado === "en_lista_espera") {
+        redirect(`/torneos/${torneoSlug}/inscripcion/lista-espera`);
+      }
     }
 
     await supabase
