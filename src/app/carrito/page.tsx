@@ -9,7 +9,6 @@ import { obtenerDatosPago } from "@/lib/data/configuracion";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { ItemCarritoRow } from "./item-carrito";
 import { OpcionesPago } from "./opciones-pago";
-import { finalizarPedido } from "./actions";
 
 export const metadata: Metadata = { title: "Mi carrito" };
 
