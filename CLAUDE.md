@@ -256,5 +256,14 @@ than relying on `supabase db push`. `src/types/database.ts` is a **hand-maintain
 TypeScript mirror of the schema (not generated) — update it in the same change as any
 migration that adds/renames a column or table.
 
+**Data API grants (since 2026-10-30):** Supabase no longer auto-grants Data API access to
+*new* tables in `public` — without an explicit grant, supabase-js/PostgREST returns
+"permission denied". Every migration that creates a table (or view) in `public` must include
+`grant all on table public.<tabla> to anon, authenticated, service_role;` (plus
+`grant all on sequence ...` for any serial/identity sequence it creates). RLS still decides
+what each role can actually do. Existing objects got this in
+`00000000000069_data_api_grants.sql` (a no-op on production, kept so a `db reset` or preview
+branch works). There is no `schema.sql` — migrations are the only schema source.
+
 RLS is the actual authorization boundary; `getUsuarioAdmin()`/`is_admin()`/
 `is_super_admin()` gate app-level convenience checks on top of it, not instead of it.
