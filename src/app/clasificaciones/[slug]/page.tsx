@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { esSvg } from "@/lib/imagen";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trophy, CalendarDays } from "lucide-react";
@@ -124,7 +125,7 @@ export default async function LigaDetallePage({
             src={liga.imagen_url}
             alt={liga.nombre}
             fill
-            unoptimized
+            unoptimized={esSvg(liga.imagen_url)}
             className="object-cover"
             sizes="100vw"
             priority
@@ -133,7 +134,7 @@ export default async function LigaDetallePage({
       ) : null}
 
       {liga.temporada ? (
-        <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+        <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
           {liga.temporada}
         </p>
       ) : null}
@@ -154,7 +155,7 @@ export default async function LigaDetallePage({
       ) : null}
 
       <h2 className="mt-8 mb-4 flex items-center gap-2 font-display text-xl font-semibold text-ajag-verde-900">
-        <Trophy size={20} className="text-ajag-oro-600" /> Clasificación oficial
+        <Trophy size={20} className="text-ajag-oro-700" /> Clasificación oficial
       </h2>
 
       {filasClasificacion.length === 0 ? (
@@ -180,7 +181,7 @@ export default async function LigaDetallePage({
               className="card-ajag flex items-center justify-between gap-3 p-4 transition hover:shadow-md"
             >
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+                <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
                   {formatearFecha(torneo.fecha)}
                 </p>
                 <p className="font-display font-semibold text-ajag-verde-900">{torneo.nombre}</p>

@@ -22,7 +22,7 @@ export default async function ListaEsperaConfirmacionPage({
       </Link>
 
       <div className="card-ajag mt-6 p-8 text-center">
-        <Clock size={40} className="mx-auto text-ajag-oro-600" />
+        <Clock size={40} className="mx-auto text-ajag-oro-700" />
         <h1 className="mt-3 font-display text-xl font-semibold text-ajag-verde-900">
           Estás en lista de espera
         </h1>

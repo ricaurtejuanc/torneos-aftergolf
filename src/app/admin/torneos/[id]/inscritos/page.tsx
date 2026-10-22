@@ -18,7 +18,7 @@ const etiquetaEstado: Record<string, string> = {
 };
 
 const claseEstado: Record<string, string> = {
-  pendiente_pago: "bg-ajag-oro-500/20 text-ajag-oro-600",
+  pendiente_pago: "bg-ajag-oro-500/20 text-ajag-oro-700",
   confirmada: "bg-ajag-verde-50 text-ajag-verde-700",
   cancelada: "bg-ajag-gris-100 text-ajag-gris-500",
 };

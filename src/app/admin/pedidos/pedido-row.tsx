@@ -24,7 +24,7 @@ interface Pedido {
 
 const etiquetaEstado: Record<EstadoPedidoPago, { texto: string; clase: string }> = {
   pendiente_confirmacion: { texto: "Pendiente", clase: "bg-ajag-gris-100 text-ajag-gris-500" },
-  marcado_pagado: { texto: "Marcado como pagado", clase: "bg-ajag-oro-500/20 text-ajag-oro-600" },
+  marcado_pagado: { texto: "Marcado como pagado", clase: "bg-ajag-oro-500/20 text-ajag-oro-700" },
   confirmado: { texto: "Confirmado", clase: "bg-ajag-verde-700 text-white" },
   rechazado: { texto: "Rechazado", clase: "bg-ajag-rojo-600/10 text-ajag-rojo-600" },
   cancelado: { texto: "Cancelado", clase: "bg-ajag-gris-100 text-ajag-gris-500" },

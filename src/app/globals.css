@@ -16,13 +16,16 @@
 
   --ajag-oro-500: #f5c315;
   --ajag-oro-600: #d9a80f;
+  /* Para TEXTO dorado: oro-500/600 sobre blanco no llega a 4.5:1 (WCAG AA). */
+  --ajag-oro-700: #7f6100;
 
   --ajag-rojo-600: #b12023;
   --ajag-rojo-700: #94191c;
 
   --ajag-gris-100: #e7e9e6;
   --ajag-gris-200: #d9dcd6;
-  --ajag-gris-500: #6b7368;
+  /* 5:1 sobre blanco y sobre verde-50 (pie): el anterior #6b7368 se quedaba en 4.48:1. */
+  --ajag-gris-500: #646c61;
 
   /* Identidad AfterGolf (extraída de aftergolf.es y su logo), solo para
      la landing /producto — no se usa en el resto del sitio de AJAG. */
@@ -66,6 +69,7 @@
 
   --color-ajag-oro-500: var(--ajag-oro-500);
   --color-ajag-oro-600: var(--ajag-oro-600);
+  --color-ajag-oro-700: var(--ajag-oro-700);
 
   --color-ajag-rojo-600: var(--ajag-rojo-600);
   --color-ajag-rojo-700: var(--ajag-rojo-700);

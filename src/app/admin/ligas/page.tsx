@@ -36,7 +36,7 @@ export default async function AdminLigasPage() {
                 <p className="font-medium text-ajag-verde-900">
                   {liga.nombre}
                   {liga.tipo_oficial ? (
-                    <span className="ml-2 rounded-full bg-ajag-oro-500/20 px-2 py-0.5 text-xs text-ajag-oro-600">
+                    <span className="ml-2 rounded-full bg-ajag-oro-500/20 px-2 py-0.5 text-xs text-ajag-oro-700">
                       {liga.tipo_oficial === "ranking" ? "Ranking oficial" : "Pool oficial"}
                     </span>
                   ) : null}

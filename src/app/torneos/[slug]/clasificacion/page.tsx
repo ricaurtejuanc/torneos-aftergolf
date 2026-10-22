@@ -120,11 +120,11 @@ export default async function ClasificacionPage({
       <Link href={hrefVolver} className="text-sm text-ajag-gris-500 hover:underline">
         ← {textoVolver}
       </Link>
-      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
         {formatearFecha(torneo.fecha)}
       </p>
       <h1 className="flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
-        <Trophy size={22} className="text-ajag-oro-600" /> {torneo.nombre}
+        <Trophy size={22} className="text-ajag-oro-700" /> {torneo.nombre}
       </h1>
 
       <ClasificacionTabs general={general} cuadroHonor={cuadroHonor} />

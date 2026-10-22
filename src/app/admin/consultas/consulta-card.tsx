@@ -68,7 +68,7 @@ export function ConsultaCard({ consulta }: { consulta: ConsultaContacto }) {
       </div>
 
       {estado.aviso ? (
-        <p className="mt-3 rounded-lg bg-ajag-oro-500/15 px-3 py-2 text-sm font-medium text-ajag-oro-600">
+        <p className="mt-3 rounded-lg bg-ajag-oro-500/15 px-3 py-2 text-sm font-medium text-ajag-oro-700">
           {estado.aviso}
         </p>
       ) : null}

@@ -46,7 +46,9 @@ export async function generateMetadata({
     openGraph: {
       title: torneo.nombre,
       description: descripcion,
-      images: torneo.poster_url ? [{ url: torneo.poster_url }] : undefined,
+      // Sin cartel, la imagen genérica del sitio (al definir openGraph aquí
+      // se reemplaza entero el del layout, no se hereda).
+      images: [torneo.poster_url ? { url: torneo.poster_url } : { url: "/og", width: 1200, height: 630 }],
     },
   };
 }
@@ -132,7 +134,7 @@ export default async function TorneoDetallePage({
       </Link>
 
       {torneo.estado === "borrador" ? (
-        <div className="mb-4 flex items-center gap-2 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-600">
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-700">
           <Eye size={16} className="shrink-0" />
           Vista previa: este torneo está en borrador y todavía no es público. Solo tú, como
           admin, puedes verlo aquí.
@@ -162,7 +164,7 @@ export default async function TorneoDetallePage({
         {liga ? (
           <Link
             href={`/clasificaciones/${liga.slug}`}
-            className="w-fit rounded-full bg-ajag-oro-500/20 px-3 py-1 text-xs font-medium text-ajag-oro-600"
+            className="w-fit rounded-full bg-ajag-oro-500/20 px-3 py-1 text-xs font-medium text-ajag-oro-700"
           >
             Puntúa para {liga.nombre}
           </Link>
@@ -250,7 +252,7 @@ export default async function TorneoDetallePage({
                           key={premio}
                           className="flex items-start gap-1.5 text-sm text-ajag-verde-900"
                         >
-                          <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-600" />
+                          <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-700" />
                           {premio}
                           {ganadores.length > 0 ? (
                             <span className="text-ajag-gris-500"> — {ganadores.join(", ")}</span>
@@ -279,7 +281,7 @@ export default async function TorneoDetallePage({
                   key={indice}
                   className="flex items-start gap-1.5 text-sm text-ajag-verde-900"
                 >
-                  <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-600" />
+                  <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-700" />
                   {premio.nombre}
                   {premio.hoyo ? (
                     <span className="text-ajag-gris-500"> (hoyo {premio.hoyo})</span>
@@ -305,7 +307,7 @@ export default async function TorneoDetallePage({
               if (seleccionados.length === 0) return null;
               return (
                 <div key={cat.categoria}>
-                  <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+                  <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
                     {cat.categoria}
                   </p>
                   <ul className="mt-1.5 flex flex-col gap-1">

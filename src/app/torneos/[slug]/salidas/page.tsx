@@ -35,7 +35,7 @@ export default async function SalidasPublicasPage({
         <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
           ← Horarios
         </Link>
-        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
           {formatearFecha(torneo.fecha)}
         </p>
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
@@ -135,7 +135,7 @@ export default async function SalidasPublicasPage({
       <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
         ← Horarios
       </Link>
-      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
         {formatearFecha(torneo.fecha)}
       </p>
       <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">{torneo.nombre}</h1>

@@ -80,7 +80,7 @@ export function TorneoCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+        <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
           {formatearFecha(torneo.fecha)}
         </p>
         <h3 className="font-display text-lg font-semibold text-ajag-verde-900">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { esSvg } from "@/lib/imagen";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { formatearFecha } from "@/lib/format";
@@ -79,7 +80,7 @@ function PestanaLigas({ ligas }: { ligas: LigaPool[] }) {
                 src={liga.imagen_url}
                 alt={liga.nombre}
                 fill
-                unoptimized
+                unoptimized={esSvg(liga.imagen_url)}
                 className="object-cover"
                 sizes="64px"
               />
@@ -90,7 +91,7 @@ function PestanaLigas({ ligas }: { ligas: LigaPool[] }) {
           <div>
             <p className="text-sm font-medium text-ajag-verde-900">{liga.nombre}</p>
             {liga.tipo_oficial ? (
-              <span className="mt-1 inline-block rounded-full bg-ajag-oro-500/20 px-2 py-0.5 text-xs text-ajag-oro-600">
+              <span className="mt-1 inline-block rounded-full bg-ajag-oro-500/20 px-2 py-0.5 text-xs text-ajag-oro-700">
                 {liga.tipo_oficial === "ranking" ? "Ranking oficial" : "Pool oficial"}
               </span>
             ) : null}
@@ -159,7 +160,7 @@ function ListaTorneos({
         const contenido = (
           <>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
                 {formatearFecha(torneo.fecha)}
               </p>
               <p className="font-display font-semibold text-ajag-verde-900">{torneo.nombre}</p>

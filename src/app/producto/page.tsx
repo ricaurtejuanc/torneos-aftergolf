@@ -96,7 +96,10 @@ export default function ProductoLandingPage() {
           Una solución profesional y personalizable para asociaciones, clubes y organizadores
           independientes de golf.
         </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        {/* Un único CTA (escribirnos para probarlo), repetido igual al final
+            de la página; "ver un ejemplo" queda como enlace secundario para
+            no competir con él. */}
+        <div className="mt-8 flex flex-col items-center gap-3">
           <a
             href={MAILTO}
             className="rounded-full bg-aftergolf-oro-500 px-6 py-3 text-sm font-semibold text-aftergolf-verde-950 transition hover:bg-aftergolf-oro-600"
@@ -105,9 +108,9 @@ export default function ProductoLandingPage() {
           </a>
           <a
             href="https://ajag.torneos.aftergolf.es/"
-            className="rounded-full border border-aftergolf-verde-700/40 px-6 py-3 text-sm font-medium text-aftergolf-verde-800 transition hover:bg-aftergolf-verde-50"
+            className="text-sm text-aftergolf-verde-800 underline underline-offset-4 hover:text-aftergolf-verde-950"
           >
-            Ver un ejemplo
+            o mira un club que ya lo usa
           </a>
         </div>
       </section>
@@ -181,7 +184,7 @@ export default function ProductoLandingPage() {
           href={MAILTO}
           className="mt-5 inline-block rounded-full bg-aftergolf-oro-500 px-6 py-3 text-sm font-semibold text-aftergolf-verde-950 transition hover:bg-aftergolf-oro-600"
         >
-          Escríbenos
+          Quiero probarlo
         </a>
       </section>
 

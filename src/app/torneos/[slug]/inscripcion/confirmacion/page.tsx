@@ -50,7 +50,7 @@ export default async function ConfirmacionInscripcionPage({
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
       <div className="card-ajag p-8 text-center">
-        <Trophy size={32} className="mx-auto text-ajag-oro-600" />
+        <Trophy size={32} className="mx-auto text-ajag-oro-700" />
         <h1 className="mt-3 font-display text-xl font-semibold text-ajag-verde-900">
           {pagoEnClub ? "¡Inscripción confirmada!" : "¡Ya casi está!"}
         </h1>

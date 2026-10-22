@@ -67,7 +67,7 @@ export function GenerarSalidasForm({
       </div>
 
       {salidaExistente ? (
-        <p className="text-xs text-ajag-oro-600">
+        <p className="text-xs text-ajag-oro-700">
           Ya existe un cuadro para este torneo. Generar de nuevo lo sustituye por completo (y lo
           deja en borrador si estaba publicado).
         </p>
@@ -234,7 +234,7 @@ export function GenerarSalidasForm({
               {TODOS_LOS_HOYOS.map((hoyo) => (
                 <label
                   key={hoyo}
-                  className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-oro-500 has-[:checked]:bg-ajag-oro-500/10 has-[:checked]:text-ajag-oro-600"
+                  className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-oro-500 has-[:checked]:bg-ajag-oro-500/10 has-[:checked]:text-ajag-oro-700"
                 >
                   <input
                     type="checkbox"

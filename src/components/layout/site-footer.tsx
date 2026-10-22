@@ -12,7 +12,8 @@ export async function SiteFooter() {
         <div className="flex items-center gap-2">
           <Image
             src={organizador?.logo_url || "/Logo_AJAG.svg"}
-            alt={organizador?.nombre ?? "AJAG Golf"}
+            // Decorativo: el nombre ya va en texto justo al lado.
+            alt=""
             width={36}
             height={36}
           />
@@ -46,12 +47,12 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-ajag-gris-100 px-4 py-4 text-center text-xs text-ajag-gris-500">
-        <nav className="mb-2 flex flex-wrap justify-center gap-x-4 gap-y-1">
-          <Link href="/aviso-legal" className="hover:text-ajag-verde-700 hover:underline">Aviso legal</Link>
-          <Link href="/privacidad" className="hover:text-ajag-verde-700 hover:underline">Privacidad</Link>
-          <Link href="/cookies" className="hover:text-ajag-verde-700 hover:underline">Cookies</Link>
-          <Link href="/terminos" className="hover:text-ajag-verde-700 hover:underline">Términos y condiciones</Link>
-          <BotonConfigurarCookies className="hover:text-ajag-verde-700 hover:underline" />
+        <nav className="mb-2 flex flex-wrap justify-center gap-x-2 gap-y-1">
+          <Link href="/aviso-legal" className="inline-block px-2 py-1.5 hover:text-ajag-verde-700 hover:underline">Aviso legal</Link>
+          <Link href="/privacidad" className="inline-block px-2 py-1.5 hover:text-ajag-verde-700 hover:underline">Privacidad</Link>
+          <Link href="/cookies" className="inline-block px-2 py-1.5 hover:text-ajag-verde-700 hover:underline">Cookies</Link>
+          <Link href="/terminos" className="inline-block px-2 py-1.5 hover:text-ajag-verde-700 hover:underline">Términos y condiciones</Link>
+          <BotonConfigurarCookies className="inline-block px-2 py-1.5 hover:text-ajag-verde-700 hover:underline" />
         </nav>
         © {new Date().getFullYear()} {organizador?.nombre ?? "AJAG Golf"}. Todos los derechos reservados.
         <br />

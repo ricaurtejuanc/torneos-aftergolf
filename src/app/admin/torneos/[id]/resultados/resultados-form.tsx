@@ -492,7 +492,7 @@ export function ResultadosForm({
         <button
           type="button"
           onClick={generarClasificacion}
-          className="flex w-fit items-center gap-1.5 rounded-full bg-ajag-oro-500/20 px-3 py-1.5 text-sm font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
+          className="flex w-fit items-center gap-1.5 rounded-full bg-ajag-oro-500/20 px-3 py-1.5 text-sm font-medium text-ajag-oro-700 hover:bg-ajag-oro-500/30"
         >
           Generar clasificación
         </button>

@@ -44,7 +44,8 @@ export async function SiteHeader() {
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Image
             src={organizador?.logo_url || "/Logo_AJAG.svg"}
-            alt={organizador?.nombre ?? "AJAG Golf"}
+            // Decorativo: el nombre ya va en texto justo al lado.
+            alt=""
             width={40}
             height={40}
             priority

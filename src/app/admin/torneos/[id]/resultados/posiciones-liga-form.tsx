@@ -36,7 +36,7 @@ export function PosicionesLigaForm({
   return (
     <form action={formAction} className="card-ajag mb-6 p-5">
       <h2 className="mb-1 flex items-center gap-2 font-display text-base font-semibold text-ajag-verde-900">
-        <ListOrdered size={17} className="text-ajag-oro-600" /> Puestos que puntúan para la liga
+        <ListOrdered size={17} className="text-ajag-oro-700" /> Puestos que puntúan para la liga
       </h2>
       <p className="mb-4 text-xs text-ajag-gris-500">
         Este torneo puntúa para una liga/pool. Elige quién quedó en cada puesto, hasta donde
@@ -53,7 +53,7 @@ export function PosicionesLigaForm({
       ) : null}
 
       {confirmados.length === 0 ? (
-        <p className="mb-4 text-xs text-ajag-oro-600">
+        <p className="mb-4 text-xs text-ajag-oro-700">
           Todavía no hay ningún inscrito confirmado en este torneo.
         </p>
       ) : null}
@@ -65,7 +65,7 @@ export function PosicionesLigaForm({
           <div key={posicion} className="flex items-center gap-3">
             <span className="w-36 shrink-0 text-sm text-ajag-gris-500">
               {posicion}º puesto{" "}
-              <span className="text-ajag-oro-600">
+              <span className="text-ajag-oro-700">
                 ({tablaPuntos[String(posicion)] ?? 0} pts)
               </span>
             </span>

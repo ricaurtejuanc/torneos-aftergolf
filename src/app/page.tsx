@@ -24,32 +24,25 @@ export default async function Home() {
             Calendario, inscripciones, salidas y clasificaciones de{" "}
             {organizador?.nombre ?? "AJAG Golf"}.
           </p>
-          <div className="mt-1 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/torneos"
-              className="rounded-full bg-ajag-oro-500 px-6 py-3 text-sm font-semibold text-ajag-verde-950 transition hover:bg-ajag-oro-600"
-            >
-              Ver calendario
-            </Link>
-            <Link
-              href="/horarios"
-              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-            >
+          {/* Un único CTA claro (apuntarse a un torneo); el resto de secciones
+              ya están en el menú, aquí solo como enlaces discretos. */}
+          <Link
+            href="/torneos"
+            className="mt-1 rounded-full bg-ajag-oro-500 px-7 py-3 text-sm font-semibold text-ajag-verde-950 transition hover:bg-ajag-oro-600"
+          >
+            Ver torneos e inscribirme
+          </Link>
+          <nav className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm text-white/85">
+            <Link href="/horarios" className="inline-block px-1 py-1.5 underline-offset-4 hover:underline">
               Horarios
             </Link>
-            <Link
-              href="/clasificaciones"
-              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-            >
+            <Link href="/clasificaciones" className="inline-block px-1 py-1.5 underline-offset-4 hover:underline">
               Clasificaciones
             </Link>
-            <Link
-              href="/patrocinadores"
-              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-            >
+            <Link href="/patrocinadores" className="inline-block px-1 py-1.5 underline-offset-4 hover:underline">
               Patrocinadores
             </Link>
-          </div>
+          </nav>
         </div>
       </section>
 
