@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { RotateCcw } from "lucide-react";
 import { guardarRonda, type EstadoGuardarRonda } from "./actions";
 import { MODALIDADES, handicapDeJuego, resultadoDeRonda } from "@/lib/handicap/calculo";
 import type { TeeCatalogo } from "@/lib/data/campos-tees";
@@ -59,14 +60,43 @@ function Resultado({
   );
 }
 
-export function CalculadoraHandicap({
+type Pestana = "antes" | "despues";
+
+/**
+ * "Nuevo cálculo" vuelve a montar la calculadora desde cero (cambiando su
+ * `key`), en vez de resetear a mano cada uno de sus estados: así no se
+ * queda ninguno atrás, incluido el mensaje de "ronda guardada" del
+ * formulario. El Handicap Index no se pierde porque se lee de localStorage,
+ * y se conserva la pestaña en la que estaba el jugador.
+ */
+export function CalculadoraHandicap(props: { haySesion: boolean; catalogo: TeeCatalogo[] }) {
+  const [version, setVersion] = useState(0);
+  const [pestana, setPestana] = useState<Pestana>("antes");
+
+  return (
+    <Calculadora
+      key={version}
+      {...props}
+      pestana={pestana}
+      setPestana={setPestana}
+      onNuevoCalculo={() => setVersion((v) => v + 1)}
+    />
+  );
+}
+
+function Calculadora({
   haySesion,
   catalogo,
+  pestana,
+  setPestana,
+  onNuevoCalculo,
 }: {
   haySesion: boolean;
   catalogo: TeeCatalogo[];
+  pestana: Pestana;
+  setPestana: (pestana: Pestana) => void;
+  onNuevoCalculo: () => void;
 }) {
-  const [pestana, setPestana] = useState<"antes" | "despues">("antes");
 
   const hiGuardado = useSyncExternalStore(sinSuscripcion, leerHiGuardado, () => "");
   const [hiEditado, setHiEditado] = useState<string | null>(null);
@@ -199,7 +229,7 @@ export function CalculadoraHandicap({
 
   return (
     <div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {(["antes", "despues"] as const).map((valor) => (
           <button
             key={valor}
@@ -214,6 +244,15 @@ export function CalculadoraHandicap({
             {valor === "antes" ? "Antes de jugar" : "Después de jugar"}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={onNuevoCalculo}
+          title="Borra el campo, el resultado y los demás datos (se mantiene tu Handicap Index)"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-ajag-gris-200 px-4 py-2 text-sm font-medium text-ajag-verde-900 transition hover:bg-ajag-verde-50"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          Nuevo cálculo
+        </button>
       </div>
 
       <form action={accionGuardar} className="mt-4 flex flex-col gap-4">
@@ -536,8 +575,11 @@ export function CalculadoraHandicap({
                     resultado.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                {/* En móvil, una columna: un input de fecha tiene un ancho
+                    mínimo propio (sobre todo en iOS) y en media columna se
+                    salía del recuadro. */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="min-w-0">
                     <label htmlFor="pcc" className={claseEtiqueta}>
                       Ajuste PCC
                     </label>
@@ -553,7 +595,7 @@ export function CalculadoraHandicap({
                       Normalmente 0; solo si el club lo comunica.
                     </p>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label htmlFor="fecha" className={claseEtiqueta}>
                       Fecha
                     </label>
@@ -563,7 +605,7 @@ export function CalculadoraHandicap({
                       type="date"
                       value={fecha}
                       onChange={(e) => setFecha(e.target.value)}
-                      className={claseCampo}
+                      className={`${claseCampo} block min-w-0 appearance-none text-left [&::-webkit-date-and-time-value]:text-left`}
                     />
                   </div>
                 </div>
