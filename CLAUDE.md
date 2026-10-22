@@ -88,8 +88,16 @@ are meant to be shown), separate from the super-admin-only INSERT/UPDATE policie
   `organizador_id_actual()` (an admin can only see/manage admins of their own
   organizador) — this was a real gap fixed alongside that panel: earlier policies checked
   `is_admin()` globally, so any admin from any organizador could manage any other's admins.
-  Other multi-tenant tables (`torneos`, `ligas_pool`, `jugadores`, `patrocinadores`, etc.)
-  have not been audited for the same unscoped-RLS gap.
+  The other multi-tenant tables were audited afterwards and are scoped the same way. What
+  RLS alone could not express — *what* a player may write in their own `inscripciones` /
+  `pedidos_pago` rows (estado, precio, cupo, linked pedido) — is enforced by the triggers in
+  `00000000000070_seguridad_escrituras_jugador.sql`, which mirror the web flow's rules and only
+  apply to `anon`/`authenticated` requests (service_role and the tournament's own admin
+  bypass them). Change those triggers in the same PR as any change to the registration or
+  payment flow, or legitimate writes will start failing with `42501`. Storage UPDATE/DELETE
+  is scoped to admins of the uploader's organizador (`archivo_es_de_mi_organizador`).
+  Note: the shared course catalog (`campos_golf`/`campo_tees`/`campo_hoyos`) is still
+  writable by any club's admin, by design (shared RFEG data).
 - `/god/*`: cross-tenant super-admin, gated by `super_admins` (`is_super_admin()` in
   Postgres, used in RLS policies), manages the `organizadores` table itself. Forced onto
   its own domain rather than any organizador's — see "Tenant resolution" above.
@@ -263,7 +271,9 @@ migration that adds/renames a column or table.
 `grant all on sequence ...` for any serial/identity sequence it creates). RLS still decides
 what each role can actually do. Existing objects got this in
 `00000000000069_data_api_grants.sql` (a no-op on production, kept so a `db reset` or preview
-branch works). There is no `schema.sql` — migrations are the only schema source.
+branch works). There is no `schema.sql` — migrations are the only schema source. Through the
+Supabase MCP, `DROP ...` statements wait for an interactive confirmation (the call times out
+after 60s when nobody answers): prefer `alter policy` / `create or replace trigger`.
 
 RLS is the actual authorization boundary; `getUsuarioAdmin()`/`is_admin()`/
 `is_super_admin()` gate app-level convenience checks on top of it, not instead of it.
