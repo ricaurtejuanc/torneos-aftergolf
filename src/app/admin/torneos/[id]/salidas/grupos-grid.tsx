@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Search, Users, Wand2, X } from "lucide-react";
 import { moverJugador, moverBloque, autocompletarPorHandicap } from "./actions";
