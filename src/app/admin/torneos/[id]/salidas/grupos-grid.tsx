@@ -81,7 +81,7 @@ export function GruposGrid({
     <div className="flex flex-col gap-5">
       {conflictos.length > 0 ? (
         <div className="card-ajag border-ajag-oro-500 bg-ajag-oro-500/10 p-4 print:hidden">
-          <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ajag-oro-600">
+          <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ajag-oro-700">
             <AlertTriangle size={16} /> {conflictos.length} conflicto
             {conflictos.length > 1 ? "s" : ""} de &quot;jugar con&quot; sin resolver
           </p>
@@ -120,7 +120,7 @@ export function GruposGrid({
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium text-ajag-verde-900">{j.nombre}</span>
                     {j.conflictoJuegaCon ? (
-                      <AlertTriangle size={14} className="shrink-0 text-ajag-oro-600" />
+                      <AlertTriangle size={14} className="shrink-0 text-ajag-oro-700" />
                     ) : null}
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
@@ -209,7 +209,7 @@ export function GruposGrid({
                   key={bloque.map((j) => j.inscripcionId).join("-")}
                   className="rounded-lg border border-ajag-oro-500 bg-ajag-oro-500/10 px-3 py-2 text-sm"
                 >
-                  <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ajag-oro-600">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ajag-oro-700">
                     <Users size={13} /> Quieren jugar juntos
                   </div>
                   <ul className="mb-2 space-y-0.5">

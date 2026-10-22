@@ -67,7 +67,7 @@ export default async function InscripcionPage({
       </p>
 
       {lleno ? (
-        <p className="mt-3 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-600">
+        <p className="mt-3 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-700">
           El cupo de este torneo está completo: al inscribirte, quedarás en lista de espera y te
           avisaremos por email si se libera una plaza.
         </p>

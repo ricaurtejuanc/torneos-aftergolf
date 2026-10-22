@@ -30,7 +30,7 @@ export function RondasList({ rondas }: { rondas: Ronda[] }) {
         <div key={r.id} className="card-ajag p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
                 {formatearFechaCorta(r.fecha)}
               </p>
               <h3 className="font-display text-base font-semibold text-ajag-verde-900">

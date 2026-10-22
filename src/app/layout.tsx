@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { GestorCookies } from "@/components/legal/gestor-cookies";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { generarEscalaVerde } from "@/lib/color";
+import { urlBaseActual } from "@/lib/sitio";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -38,10 +39,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const organizador = esPlataforma ? null : await obtenerOrganizadorActual();
   const nombre = organizador?.nombre ?? "AJAG Golf";
 
+  const descripcion = `Calendario de torneos, inscripciones, salidas y clasificaciones de ${nombre}.`;
   return {
+    // Cada organizador tiene su dominio: las URLs absolutas de metadata
+    // (og:image, canonical...) se construyen con el host de la visita.
+    metadataBase: new URL(await urlBaseActual()),
     title: { default: nombre, template: `%s · ${nombre}` },
-    description: `Calendario de torneos, inscripciones, salidas y clasificaciones de ${nombre}.`,
+    description: descripcion,
     icons: { icon: organizador?.logo_url ?? ICONO_PLATAFORMA },
+    openGraph: {
+      type: "website",
+      locale: "es_ES",
+      siteName: nombre,
+      title: nombre,
+      description: descripcion,
+      images: [{ url: "/og", width: 1200, height: 630, alt: nombre }],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 

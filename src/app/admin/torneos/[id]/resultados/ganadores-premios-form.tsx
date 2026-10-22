@@ -173,7 +173,7 @@ export function GanadoresPremiosForm({
   return (
     <form action={formAction} className="card-ajag mb-6 p-5">
       <h2 className="mb-1 flex items-center gap-2 font-display text-base font-semibold text-ajag-verde-900">
-        <Trophy size={17} className="text-ajag-oro-600" /> Cuadro de honor
+        <Trophy size={17} className="text-ajag-oro-700" /> Cuadro de honor
       </h2>
       <p className="mb-4 text-xs text-ajag-gris-500">
         Elige el ganador de cada premio entre los inscritos confirmados. En premios como
@@ -190,7 +190,7 @@ export function GanadoresPremiosForm({
       ) : null}
 
       {confirmados.length === 0 ? (
-        <p className="mb-4 text-xs text-ajag-oro-600">
+        <p className="mb-4 text-xs text-ajag-oro-700">
           Todavía no hay ningún inscrito confirmado en este torneo.
         </p>
       ) : null}
@@ -263,7 +263,7 @@ export function GanadoresPremiosForm({
               <button
                 type="button"
                 onClick={() => anadirPremio(indiceCategoria)}
-                className="flex w-fit items-center gap-1 text-xs font-medium text-ajag-oro-600 hover:underline"
+                className="flex w-fit items-center gap-1 text-xs font-medium text-ajag-oro-700 hover:underline"
               >
                 <Plus size={13} /> Añadir premio en {cat.nombre}
               </button>
@@ -384,7 +384,7 @@ export function GanadoresPremiosForm({
           <button
             type="button"
             onClick={anadirPremioHoyo}
-            className="flex items-center gap-1 rounded-lg bg-ajag-oro-500/20 px-2 py-1 text-xs font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
+            className="flex items-center gap-1 rounded-lg bg-ajag-oro-500/20 px-2 py-1 text-xs font-medium text-ajag-oro-700 hover:bg-ajag-oro-500/30"
           >
             <Plus size={12} /> Añadir premio por hoyo
           </button>

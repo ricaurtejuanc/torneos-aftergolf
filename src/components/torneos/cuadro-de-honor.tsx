@@ -37,7 +37,7 @@ export function CuadroDeHonor({ torneo }: { torneo: Torneo }) {
   return (
     <div className="card-ajag p-5">
       <h2 className="mb-3 flex items-center gap-2 font-display text-base font-semibold text-ajag-verde-900">
-        <Trophy size={18} className="text-ajag-oro-600" /> Cuadro de honor
+        <Trophy size={18} className="text-ajag-oro-700" /> Cuadro de honor
       </h2>
       <div className="grid gap-5 sm:grid-cols-2">
         {categorias.map((cat) => (

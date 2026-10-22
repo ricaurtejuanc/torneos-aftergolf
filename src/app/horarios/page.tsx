@@ -76,7 +76,7 @@ function ListaHorarios({
         const contenido = (
           <>
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+              <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-700">
                 {formatearFecha(torneo.fecha)}
               </p>
               <p className="font-display font-semibold text-ajag-verde-900">{torneo.nombre}</p>

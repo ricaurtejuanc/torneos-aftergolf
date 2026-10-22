@@ -22,7 +22,7 @@ interface PedidoConDetalle {
 }
 
 const etiquetaEstado: Record<EstadoPedidoPago, { texto: string; clase: string }> = {
-  pendiente_confirmacion: { texto: "Pendiente de pago", clase: "bg-ajag-oro-500/20 text-ajag-oro-600" },
+  pendiente_confirmacion: { texto: "Pendiente de pago", clase: "bg-ajag-oro-500/20 text-ajag-oro-700" },
   marcado_pagado: { texto: "Pago enviado, esperando confirmación", clase: "bg-ajag-verde-100 text-ajag-verde-700" },
   confirmado: { texto: "Confirmado", clase: "bg-ajag-verde-700 text-white" },
   rechazado: { texto: "Rechazado", clase: "bg-ajag-rojo-600/10 text-ajag-rojo-600" },

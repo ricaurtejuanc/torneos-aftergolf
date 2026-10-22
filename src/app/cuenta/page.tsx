@@ -131,7 +131,7 @@ export default async function CuentaPage({
                         key={e.id}
                         className="card-ajag flex items-center gap-3 border-l-4 border-l-ajag-oro-500 p-4"
                       >
-                        <Clock size={18} className="shrink-0 text-ajag-oro-600" />
+                        <Clock size={18} className="shrink-0 text-ajag-oro-700" />
                         <div className="min-w-0">
                           <p className="font-medium text-ajag-verde-900">
                             {e.torneos?.nombre ?? "Torneo"}

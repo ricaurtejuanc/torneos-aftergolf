@@ -291,10 +291,10 @@ export function InscripcionForm({
       <button
         type="submit"
         disabled={pending}
-        className={`rounded-xl px-5 py-3 text-sm font-medium text-white transition disabled:opacity-60 ${
+        className={`rounded-xl px-5 py-3 text-sm font-medium transition disabled:opacity-60 ${
           listaEspera
-            ? "bg-ajag-oro-600 hover:bg-ajag-oro-500"
-            : "bg-ajag-verde-700 hover:bg-ajag-verde-600"
+            ? "bg-ajag-oro-500 text-ajag-verde-950 hover:bg-ajag-oro-600"
+            : "bg-ajag-verde-700 text-white hover:bg-ajag-verde-600"
         }`}
       >
         {listaEspera

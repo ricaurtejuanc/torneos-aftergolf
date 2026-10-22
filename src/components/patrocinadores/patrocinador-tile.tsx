@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { esSvg } from "@/lib/imagen";
 import { Phone } from "lucide-react";
 import type { Patrocinador } from "@/types/database";
 
@@ -14,7 +15,7 @@ export function PatrocinadorTile({ patrocinador }: { patrocinador: Patrocinador 
         src={patrocinador.logo_url}
         alt={patrocinador.nombre}
         fill
-        unoptimized
+        unoptimized={esSvg(patrocinador.logo_url)}
         className="object-contain p-4"
         sizes="(min-width: 768px) 25vw, 50vw"
       />

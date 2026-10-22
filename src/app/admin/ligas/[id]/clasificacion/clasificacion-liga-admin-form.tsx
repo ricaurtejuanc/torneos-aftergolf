@@ -194,7 +194,7 @@ export function ClasificacionLigaAdminForm({
           type="button"
           onClick={recalcular}
           disabled={recalculando}
-          className="flex w-fit items-center gap-1.5 rounded-full bg-ajag-oro-500/20 px-3 py-1.5 text-sm font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30 disabled:opacity-60"
+          className="flex w-fit items-center gap-1.5 rounded-full bg-ajag-oro-500/20 px-3 py-1.5 text-sm font-medium text-ajag-oro-700 hover:bg-ajag-oro-500/30 disabled:opacity-60"
         >
           <RefreshCw size={15} /> {recalculando ? "Recalculando..." : "Recalcular desde resultados"}
         </button>
