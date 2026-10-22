@@ -53,8 +53,9 @@ export async function GET() {
               marginBottom: 40,
             }}
           >
+            {/* 136px y redondeado: un logo JPEG cuadrado con fondo cabe entero en el círculo. */}
             {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse no admite next/image */}
-            <img src={logo} width={160} height={160} style={{ objectFit: "contain" }} alt="" />
+            <img src={logo} width={136} height={136} style={{ objectFit: "contain", borderRadius: 68 }} alt="" />
           </div>
         ) : null}
         <div style={{ fontSize: 72, fontWeight: 700, lineHeight: 1.1 }}>{nombre}</div>
