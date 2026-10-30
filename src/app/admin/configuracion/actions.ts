@@ -159,7 +159,11 @@ export async function actualizarDatosLegales(
     razon_social: String(formData.get("razon_social") ?? "").trim(),
     nif: String(formData.get("nif") ?? "").trim().toUpperCase(),
     domicilio: String(formData.get("domicilio") ?? "").trim(),
+    email: String(formData.get("email_legal") ?? "").trim().toLowerCase(),
   };
+  if (datos.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
+    return { ok: false, error: "El email de contacto legal no es válido." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("configuracion").upsert(

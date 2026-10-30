@@ -29,7 +29,7 @@ interface Club {
   recorridos: { id: string; recorrido: string; tees: TeeVista[] }[];
 }
 
-export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boolean }) {
+export function CamposList({ clubes, puedeBorrar }: { clubes: Club[]; puedeBorrar: boolean }) {
   const [busqueda, setBusqueda] = useState("");
   const [estadoAlta, dispatchAlta, pendingAlta] = useActionState<EstadoCampo, FormData>(crearCampo, {
     ok: false,
@@ -119,7 +119,7 @@ export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boole
             <p className="text-sm text-ajag-gris-500">Sin resultados.</p>
           ) : (
             clubesFiltrados.map((club) => (
-              <ClubCard key={club.nombre} club={club} esOwner={esOwner} />
+              <ClubCard key={club.nombre} club={club} puedeBorrar={puedeBorrar} />
             ))
           )}
         </div>
@@ -128,7 +128,7 @@ export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boole
   );
 }
 
-function ClubCard({ club, esOwner }: { club: Club; esOwner: boolean }) {
+function ClubCard({ club, puedeBorrar }: { club: Club; puedeBorrar: boolean }) {
   const [editandoNombre, setEditandoNombre] = useState(false);
   const [nombreEditado, setNombreEditado] = useState(club.nombre);
   const [pendiente, startTransition] = useTransition();
@@ -207,7 +207,7 @@ function ClubCard({ club, esOwner }: { club: Club; esOwner: boolean }) {
             club={club.nombre}
             recorrido={r.recorrido}
             tees={r.tees}
-            esOwner={esOwner}
+            puedeBorrar={puedeBorrar}
           />
         ))}
       </ul>
@@ -220,13 +220,13 @@ function RecorridoRow({
   club,
   recorrido,
   tees,
-  esOwner,
+  puedeBorrar,
 }: {
   id: string;
   club: string;
   recorrido: string;
   tees: TeeVista[];
-  esOwner: boolean;
+  puedeBorrar: boolean;
 }) {
   const [editando, setEditando] = useState(false);
   const [verTees, setVerTees] = useState(false);
@@ -314,7 +314,7 @@ function RecorridoRow({
               >
                 <Pencil size={13} />
               </button>
-              {esOwner && (
+              {puedeBorrar && (
                 <button
                   type="button"
                   disabled={pendiente}
@@ -330,7 +330,7 @@ function RecorridoRow({
         )}
       </div>
       {error ? <p className="text-xs text-ajag-rojo-600">{error}</p> : null}
-      {verTees ? <TeesRecorrido club={club} recorrido={recorrido} tees={tees} /> : null}
+      {verTees ? <TeesRecorrido club={club} recorrido={recorrido} tees={tees} puedeBorrar={puedeBorrar} /> : null}
     </li>
   );
 }
@@ -343,10 +343,12 @@ function TeesRecorrido({
   club,
   recorrido,
   tees,
+  puedeBorrar,
 }: {
   club: string;
   recorrido: string;
   tees: TeeVista[];
+  puedeBorrar: boolean;
 }) {
   const alta = crearTee.bind(null, club, recorrido);
   const [estado, dispatch, pendiente] = useActionState<EstadoCampo, FormData>(alta, {
@@ -364,7 +366,7 @@ function TeesRecorrido({
       ) : (
         <ul className="flex flex-col gap-1">
           {tees.map((t) => (
-            <TeeRow key={t.id} tee={t} />
+            <TeeRow key={t.id} tee={t} puedeBorrar={puedeBorrar} />
           ))}
         </ul>
       )}
@@ -391,7 +393,7 @@ function TeesRecorrido({
   );
 }
 
-function TeeRow({ tee }: { tee: TeeVista }) {
+function TeeRow({ tee, puedeBorrar }: { tee: TeeVista; puedeBorrar: boolean }) {
   const [editando, setEditando] = useState(false);
   const [pendiente, startTransition] = useTransition();
   const guardar = actualizarTee.bind(null, tee.id);
@@ -454,21 +456,23 @@ function TeeRow({ tee }: { tee: TeeVista }) {
         >
           <Pencil size={12} />
         </button>
-        <button
-          type="button"
-          disabled={pendiente}
-          onClick={() => {
-            if (confirm(`¿Quitar la barra ${tee.tee}? También borra su tarjeta hoyo a hoyo.`)) {
-              startTransition(() => {
-                void eliminarTee(tee.id);
-              });
-            }
-          }}
-          className="text-ajag-gris-500 hover:text-ajag-rojo-600 disabled:opacity-50"
-          aria-label={`Eliminar barra ${tee.tee}`}
-        >
-          <Trash2 size={12} />
-        </button>
+        {puedeBorrar && (
+          <button
+            type="button"
+            disabled={pendiente}
+            onClick={() => {
+              if (confirm(`¿Quitar la barra ${tee.tee}? También borra su tarjeta hoyo a hoyo.`)) {
+                startTransition(() => {
+                  void eliminarTee(tee.id);
+                });
+              }
+            }}
+            className="text-ajag-gris-500 hover:text-ajag-rojo-600 disabled:opacity-50"
+            aria-label={`Eliminar barra ${tee.tee}`}
+          >
+            <Trash2 size={12} />
+          </button>
+        )}
       </span>
     </li>
   );

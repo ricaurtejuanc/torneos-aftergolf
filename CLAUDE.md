@@ -96,8 +96,9 @@ are meant to be shown), separate from the super-admin-only INSERT/UPDATE policie
   bypass them). Change those triggers in the same PR as any change to the registration or
   payment flow, or legitimate writes will start failing with `42501`. Storage UPDATE/DELETE
   is scoped to admins of the uploader's organizador (`archivo_es_de_mi_organizador`).
-  Note: the shared course catalog (`campos_golf`/`campo_tees`/`campo_hoyos`) is still
-  writable by any club's admin, by design (shared RFEG data).
+  The shared course catalog (`campos_golf`/`campo_tees`/`campo_hoyos`) can be added to and
+  edited by any club's admin (shared RFEG data), but only deleted by the super-admin
+  (`00000000000071_campos_borrar_solo_super_admin.sql`, mirrored in `/admin/campos`).
 - `/god/*`: cross-tenant super-admin, gated by `super_admins` (`is_super_admin()` in
   Postgres, used in RLS policies), manages the `organizadores` table itself. Forced onto
   its own domain rather than any organizador's — see "Tenant resolution" above.

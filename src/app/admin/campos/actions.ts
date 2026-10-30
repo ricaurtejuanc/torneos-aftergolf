@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getUsuarioAdmin } from "@/lib/auth";
+import { getSuperAdmin, getUsuarioAdmin } from "@/lib/auth";
 
 export type EstadoCampo = { ok: boolean; error: string | null };
 
@@ -63,12 +63,13 @@ export async function actualizarRecorrido(id: string, recorridoNuevo: string): P
   return { ok: true, error: null };
 }
 
+// El catálogo de campos es compartido por todos los organizadores: borrar
+// afecta a todos, así que solo puede hacerlo el super-admin de la plataforma
+// (la base de datos lo exige también, ver migración 071).
+const SOLO_SUPER_ADMIN = "Solo el administrador de la plataforma puede borrar campos del catálogo compartido.";
+
 export async function eliminarRecorrido(id: string): Promise<EstadoCampo> {
-  const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
-  if (admin.rol !== "owner") {
-    return { ok: false, error: "Solo el owner del organizador puede eliminar campos." };
-  }
+  if (!(await getSuperAdmin())) return { ok: false, error: SOLO_SUPER_ADMIN };
 
   const supabase = await createClient();
   const { error } = await supabase.from("campos_golf").delete().eq("id", id);
@@ -180,8 +181,7 @@ export async function actualizarTee(
 }
 
 export async function eliminarTee(teeId: string): Promise<EstadoCampo> {
-  const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!(await getSuperAdmin())) return { ok: false, error: SOLO_SUPER_ADMIN };
 
   const supabase = await createClient();
   // La tarjeta hoyo a hoyo cuelga del tee con on delete cascade.

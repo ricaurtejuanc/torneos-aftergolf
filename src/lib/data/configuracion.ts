@@ -83,7 +83,7 @@ export async function economiaActiva(organizadorId: string): Promise<boolean> {
 /** Datos identificativos del titular del sitio (LSSI art. 10), que se
  * muestran en Aviso legal / Privacidad. Cada organizador rellena los suyos
  * en /admin/configuracion. */
-export type DatosLegales = { razon_social: string; nif: string; domicilio: string };
+export type DatosLegales = { razon_social: string; nif: string; domicilio: string; email: string };
 
 export async function obtenerDatosLegales(): Promise<DatosLegales | null> {
   const organizadorId = await obtenerOrganizadorIdActual();
@@ -103,5 +103,6 @@ export async function obtenerDatosLegales(): Promise<DatosLegales | null> {
     razon_social: typeof valor.razon_social === "string" ? valor.razon_social : "",
     nif: typeof valor.nif === "string" ? valor.nif : "",
     domicilio: typeof valor.domicilio === "string" ? valor.domicilio : "",
+    email: typeof valor.email === "string" ? valor.email : "",
   };
 }
