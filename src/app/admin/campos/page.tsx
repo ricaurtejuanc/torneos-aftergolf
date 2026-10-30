@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { getUsuarioAdmin } from "@/lib/auth";
+import { getSuperAdmin } from "@/lib/auth";
 import { CamposList, type TeeVista } from "./campos-list";
 
 export const metadata: Metadata = { title: "Campos de golf · Admin" };
 
 export default async function CamposPage() {
-  const [supabaseClient, admin] = await Promise.all([createClient(), getUsuarioAdmin()]);
+  const [supabaseClient, superAdmin] = await Promise.all([createClient(), getSuperAdmin()]);
   const [{ data: campos }, { data: tees }] = await Promise.all([
     supabaseClient
       .from("campos_golf")
@@ -51,7 +51,9 @@ export default async function CamposPage() {
     .map(([nombre, recorridos]) => ({ nombre, recorridos }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-  const esOwner = admin?.rol === "owner";
+  // El catálogo es compartido por todos los clubes: borrar solo lo puede
+  // hacer el super-admin de la plataforma (editar y añadir, cualquier admin).
+  const puedeBorrar = Boolean(superAdmin);
 
   return (
     <div>
@@ -64,7 +66,7 @@ export default async function CamposPage() {
         Cambiar un nombre aquí no modifica los torneos que ya lo usan — solo afecta a las
         sugerencias a partir de ahora.
       </p>
-      <CamposList clubes={clubesOrdenados} esOwner={esOwner} />
+      <CamposList clubes={clubesOrdenados} puedeBorrar={puedeBorrar} />
     </div>
   );
 }

@@ -41,7 +41,10 @@ export async function obtenerTitularLegal(): Promise<TitularLegal> {
     razonSocial: datos?.razon_social || null,
     nif: datos?.nif || null,
     domicilio: datos?.domicilio || null,
-    email: organizador?.email_contacto ?? null,
+    // Email propio para lo legal (ejercicio de derechos RGPD...) si se ha
+    // configurado; si no, el de contacto del organizador. Son distintos a
+    // propósito: email_contacto también es donde llegan las consultas.
+    email: datos?.email || organizador?.email_contacto || null,
     esOrganizador: true,
   };
 }

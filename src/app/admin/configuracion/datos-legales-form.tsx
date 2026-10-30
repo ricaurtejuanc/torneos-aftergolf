@@ -4,10 +4,11 @@ import { useActionState } from "react";
 import { actualizarDatosLegales, type EstadoConfiguracion } from "./actions";
 import type { DatosLegales } from "@/lib/data/configuracion";
 
-const CAMPOS: { name: keyof DatosLegales; label: string; placeholder: string }[] = [
-  { name: "razon_social", label: "Razón social / nombre de la entidad", placeholder: "Ej. Asociación de Jugadores Amateur de Golf" },
-  { name: "nif", label: "NIF / CIF", placeholder: "Ej. G12345678" },
-  { name: "domicilio", label: "Domicilio social", placeholder: "Calle, número, CP, ciudad" },
+const CAMPOS: { name: keyof DatosLegales; input: string; label: string; placeholder: string; type?: string }[] = [
+  { name: "razon_social", input: "razon_social", label: "Razón social / nombre de la entidad", placeholder: "Ej. Asociación de Jugadores Amateur de Golf" },
+  { name: "nif", input: "nif", label: "NIF / CIF", placeholder: "Ej. G12345678" },
+  { name: "domicilio", input: "domicilio", label: "Domicilio social", placeholder: "Calle, número, CP, ciudad" },
+  { name: "email", input: "email_legal", label: "Email de contacto legal (privacidad, derechos RGPD)", placeholder: "Si se deja vacío, el email de contacto del organizador", type: "email" },
 ];
 
 export function DatosLegalesForm({ datosActuales }: { datosActuales: DatosLegales | null }) {
@@ -21,12 +22,13 @@ export function DatosLegalesForm({ datosActuales }: { datosActuales: DatosLegale
       <p className="text-sm font-medium text-ajag-verde-900">Datos legales</p>
       {CAMPOS.map((campo) => (
         <div key={campo.name}>
-          <label htmlFor={campo.name} className="text-xs text-ajag-gris-500">
+          <label htmlFor={campo.input} className="text-xs text-ajag-gris-500">
             {campo.label}
           </label>
           <input
-            id={campo.name}
-            name={campo.name}
+            id={campo.input}
+            name={campo.input}
+            type={campo.type ?? "text"}
             defaultValue={datosActuales?.[campo.name] ?? ""}
             placeholder={campo.placeholder}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
